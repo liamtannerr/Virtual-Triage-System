@@ -1,0 +1,19 @@
+@startuml
+left to right direction
+actor Patient as g
+actor "Nurse" as fc
+package "Mister Ed" {
+  usecase "Check ED Wait Time" as UC2
+ usecase "Check Patient Information" as UC5
+  usecase "Register" as UC1
+  usecase "Virtual Triage" as UC3
+  usecase "Notify Patient" as UC4
+}
+g -- UC2
+fc -- UC2
+UC1 --> UC3 : Includes
+fc -- UC4
+g -- UC1
+UC3 -- UC5 : Extends
+UC3 -- fc
+@enduml
