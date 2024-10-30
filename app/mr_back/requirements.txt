@@ -1,5 +1,6 @@
-fastapi==0.115.2
-uvicorn==0.32.0
-requests==2.32.3
-PyJWT==2.9.0
-pymongo==4.10.1
+fastapi
+uvicorn
+pymongo
+motor
+python-jose
+jwt
