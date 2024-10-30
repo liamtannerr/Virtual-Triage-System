@@ -29,7 +29,7 @@ function Register() {
             })
             .catch(error => {
                 console.error(error);
-                setMessage('Error registering. Please try again.');
+                setMessage(error.response?.data?.detail || 'Error registering. Please try again.');
             });
     };
     return (
@@ -37,7 +37,7 @@ function Register() {
             <Container>
                 <Row>
                     <Col>
-                        <h1 class="text-center">Login</h1>
+                        <h1 class="text-center">Register</h1>
                     </Col>
                 </Row>
             </Container>
