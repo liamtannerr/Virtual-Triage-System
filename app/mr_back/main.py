@@ -1,10 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel
 from pymongo import MongoClient
+from classes.User import User
 import jwt
 import uvicorn
+
 
 app = FastAPI()
 
@@ -15,10 +16,6 @@ app.add_middleware(
     allow_methods=[ '*' ],
     allow_headers=[ '*' ],
 )
-
-class User( BaseModel ):
-    email: str
-    password: str
 
 # MongoDB connection
 uri = 'mongodb+srv://admin:admin@mrcluster.lrupm.mongodb.net/?retryWrites=true&w=majority&tlsAllowInvalidCertificates=true'
