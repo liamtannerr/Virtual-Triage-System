@@ -14,7 +14,7 @@ SECRET_KEY = 'super_secret_key'
 security = HTTPBearer()
 
 
-async def login_service(user: User):
+async def login_service( user: User ):
     try:
         user_data = users_collection.find_one( { 'email': user.email, 'password': user.password } )
         
@@ -37,8 +37,9 @@ async def register_service( user: User ):
     
     if existing_user:
         raise HTTPException( status_code = status.HTTP_400_BAD_REQUEST, detail = "User already exists" )
-        
+    
     user_dict = user.dict()
+    user_dict[ 'user_type' ] = 1
     users_collection.insert_one( user_dict )
     token = generate_token( user.email )
     user_dict[ "_id" ] = str( user_dict[ "_id" ] )
