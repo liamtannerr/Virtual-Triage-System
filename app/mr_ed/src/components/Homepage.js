@@ -16,7 +16,6 @@ function Homepage() {
             .then(data => setUserData(data))
             .catch(error => console.error(error));
     }, []);
-    const username = localStorage.getItem('username');
     const email = localStorage.getItem('email');
     return (
         <div>
@@ -29,7 +28,7 @@ function Homepage() {
             </Container>
             {userData && (
                 <p>
-                    Welcome {username}, {email} to the homepage!
+                    Welcome {email} to the homepage!
                 </p>
             )}
         </div>

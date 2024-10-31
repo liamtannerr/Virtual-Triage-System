@@ -14,6 +14,7 @@ function EDNavbar() {
               <Nav.Link href="/">Home</Nav.Link>
               <Nav.Link href="/login">Login</Nav.Link>
               <Nav.Link href="/register">Register</Nav.Link>
+              <Nav.Link href="/enter">Enter Virtual Triage</Nav.Link>
             </Nav>
           </Navbar.Collapse>
         </Container>
