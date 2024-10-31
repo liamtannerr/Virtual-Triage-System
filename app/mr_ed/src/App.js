@@ -4,6 +4,7 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Homepage from './components/Homepage';
 import EDNavbar from './components/EDNavbar';
+import PatientWaiting from './components/patientWaiting'; // Import the PatientWaiting component
 
 function App() {
   return (
@@ -14,9 +15,11 @@ function App() {
           <Route path="/" element={<Homepage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/patientWaiting" element={<PatientWaiting />} /> {/* Corrected component name */}
         </Routes>
       </div>
     </Router>
   );
 }
+
 export default App;
