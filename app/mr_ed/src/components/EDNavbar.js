@@ -15,6 +15,7 @@ function EDNavbar() {
               <Nav.Link href="/login">Login</Nav.Link>
               <Nav.Link href="/register">Register</Nav.Link>
               <Nav.Link href="/patientWaiting">Patient Waiting</Nav.Link> {/* Add a link to the PatientWaiting component */}
+              <Nav.Link href="/enter">Enter Virtual Triage</Nav.Link>
             </Nav>
           </Navbar.Collapse>
         </Container>

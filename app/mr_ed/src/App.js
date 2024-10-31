@@ -5,6 +5,7 @@ import Register from './components/Register';
 import Homepage from './components/Homepage';
 import EDNavbar from './components/EDNavbar';
 import PatientWaiting from './components/patientWaiting'; // Import the PatientWaiting component
+import EnterVirtualTriage from './components/EnterVirtualTriage';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/patientWaiting" element={<PatientWaiting />} /> {/* Corrected component name */}
+          <Route path="/enter" element={<EnterVirtualTriage />} />
         </Routes>
       </div>
     </Router>
