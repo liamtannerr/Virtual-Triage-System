@@ -6,6 +6,7 @@ import Homepage from './components/Homepage';
 import EDNavbar from './components/EDNavbar';
 import PatientWaiting from './components/patientWaiting';
 import NurseWaiting from './components/nurseWaiting';
+import EnterVirtualTriage from './components/EnterVirtualTriage';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/patientWaiting" element={<PatientWaiting />} /> 
           <Route path="/nurseWaiting" element={<NurseWaiting />} />
+          <Route path="/enter" element={<EnterVirtualTriage />} />
         </Routes>
       </div>
     </Router>
