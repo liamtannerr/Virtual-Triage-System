@@ -16,9 +16,6 @@ class PatientRegister( BaseModel ):
     healthNumber: str
     email: str
     password: str
-    
-    
-    
 
 class UserResponse( BaseModel ):
     email: str
