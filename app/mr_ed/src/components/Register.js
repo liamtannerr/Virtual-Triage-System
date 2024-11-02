@@ -26,11 +26,13 @@ function Register() {
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
     const navigate = useNavigate();
+    const [userType, setUserType] = useState(1);
+
    
     const handleRegister = () => {
         // Send registration request to the backend
         axios
-            .post('http://localhost:8000/register', { name, dateOfBirth, gender, streetAddress, city, province, country, postalCode, healthNumber, email, password })
+            .post('http://localhost:8000/register', { name, dateOfBirth, gender, streetAddress, city, province, country, postalCode, healthNumber, email, password, userType})
             .then(response => {
                 setMessage(response.data.message);
                 const { email, token } = response.data;
