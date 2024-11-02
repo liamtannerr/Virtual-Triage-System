@@ -32,7 +32,7 @@ function Register() {
     const handleRegister = () => {
         // Send registration request to the backend
         axios
-            .post('http://localhost:8000/register', { name, dateOfBirth, gender, streetAddress, city, province, country, postalCode, healthNumber, email, password, userType})
+            .post('http://localhost:8000/auth/register', { name, dateOfBirth, gender, streetAddress, city, province, country, postalCode, healthNumber, email, password, userType})
             .then(response => {
                 setMessage(response.data.message);
                 const { email, token } = response.data;
