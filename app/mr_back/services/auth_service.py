@@ -1,7 +1,8 @@
 from pymongo import MongoClient
 import jwt
 from fastapi import HTTPException, status
-from models.User import User
+from models.User import PatientLogin
+from models.User import PatientRegister
 from fastapi.security import HTTPBearer
 
 
@@ -14,15 +15,15 @@ SECRET_KEY = 'super_secret_key'
 security = HTTPBearer()
 
 
-async def login_service( user: User ):
+async def login_service( patientLogin: PatientLogin ):
     try:
-        user_data = users_collection.find_one( { 'email': user.email, 'password': user.password } )
+        patient_data = users_collection.find_one( { 'email': patientLogin.email, 'password': patientLogin.password } )
         
-        if user_data:
-            token = generate_token( user.email )
-            user_data[ '_id' ] = str( user_data[ '_id' ] )  # Convert ObjectId to string
-            user_data[ 'token' ] = token
-            return user_data
+        if patient_data:
+            token = generate_token( patientLogin.email )
+            patient_data[ '_id' ] = str( patient_data[ '_id' ] )  # Convert ObjectId to string
+            patient_data[ 'token' ] = token
+            return patient_data
         
         raise HTTPException( status_code = status.HTTP_401_UNAUTHORIZED, detail = "Invalid email or password" )
     
@@ -30,21 +31,20 @@ async def login_service( user: User ):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
 
-async def register_service( user: User ):
+async def register_service( patientRegister: PatientRegister ):
     existing_user = users_collection.find_one(
-        { 'email': user.email }
-    )
+        { 'email': patientRegister.email })
     
     if existing_user:
         raise HTTPException( status_code = status.HTTP_400_BAD_REQUEST, detail = "User already exists" )
     
-    user_dict = user.dict()
-    user_dict[ 'user_type' ] = 1
-    users_collection.insert_one( user_dict )
-    token = generate_token( user.email )
-    user_dict[ "_id" ] = str( user_dict[ "_id" ] )
-    user_dict[ "token" ] = token
-    return user_dict
+    patient_dict = patientRegister.dict()
+    patient_dict[ 'user_type' ] = 1
+    users_collection.insert_one( patient_dict )
+    token = generate_token( patientRegister.email )
+    patient_dict[ "_id" ] = str( patient_dict[ "_id" ] )
+    patient_dict[ "token" ] = token
+    return patient_dict
 
 
 async def get_user_service( token: str ):
