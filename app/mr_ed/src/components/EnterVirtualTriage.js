@@ -60,12 +60,11 @@ function EnterVirtualTriage() {
         alcohol: false,
         drugs: false,
         consent: false,
-        emergencyDepartment: "Select the emergency department you'd like to attend"
+        emergencyDepartment: "Select the emergency department you'd like to attend",
     });
 
     const handleSymptomChange = (event) => {
         const { id, checked } = event.target
-        console.log(event)
         setSymptoms(prevState => ({
             ...prevState,
             [id]: checked,
@@ -101,11 +100,87 @@ function EnterVirtualTriage() {
             ...prevState,
             [id]: value,
         }));
-    } // might be able to use above handle
+    }
 
     const handleEnter = (event) => {
+        const data = {
+            ED: symptoms.emergencyDepartment,
+            durationOfSymptoms: symptoms.duration,
+            listAllergies: symptoms.allergies,
+            pastMedicalConditions: symptoms.pastMedical,
+            generalSymptoms: {
+              fever: symptoms.fever,
+              chills: symptoms.chills,
+              fatigue: symptoms.fatigue,
+              weakness: symptoms.weakness,
+              weightChange: symptoms.weightChange,
+              nightSweats: symptoms.nightSweats,
+            },
+            respiratorySymptoms: {
+              cough: symptoms.cough,
+              shortnessOfBreath: symptoms.shortnessOfBreath,
+              wheezing: symptoms.wheezing,
+              soreThroat: symptoms.soreThroat,
+              nasalCongestion: symptoms.nasalCongestion,
+              chestPain: symptoms.chestPain,
+            },
+            gastrointestinalSymptoms: {
+              nausea: symptoms.nausea,
+              vomiting: symptoms.vomiting,
+              diarrhea: symptoms.diarrhea,
+              constipation: symptoms.constipation,
+              abdominalPain: symptoms.abdominalPain,
+              appetiteLoss: symptoms.lossOfAppetite,
+            },
+            neurologicalSymptoms: {
+              headache: symptoms.headache,
+              dizziness: symptoms.dizziness,
+              numbness: symptoms.numbness,
+              confusion: symptoms.confusion,
+              memoryLoss: symptoms.memoryLoss,
+              seizures: symptoms.seizures,
+            },
+            musculoskeletalSymptoms: {
+              jointPain: symptoms.jointPain,
+              musclePain: symptoms.musclePain,
+              stiffness: symptoms.stiffness,
+              backPain: symptoms.backPain,
+            },
+            cardiovascularSymptoms: {
+              palpitations: symptoms.palpitations,
+              swellinglegsAnkles: symptoms.swelling,
+              chestPain: symptoms.chestPain,
+              acceleratedHeartbeat: symptoms.fastHeartrate
+            },
+            skinSymptoms: {
+              rash: symptoms.rash,
+              itching: symptoms.itching,
+              bruising: symptoms.skinColorChange,
+              wounds: symptoms.wounds,
+            },
+            psychologicalSymptoms: {
+              anxiety: symptoms.anxiety,
+              depression: symptoms.depression,
+              moodSwings: symptoms.moodSwings,
+              sleepPatternChanges: symptoms.sleepChanges
+            },
+            substanceHabits: {
+              alcohol: symptoms.alcohol,
+              smoking: symptoms.smoke,
+              drugs: symptoms.drugs,
+            },
+            consent: symptoms.consent,
+            timestamp: new Date().toISOString(),
+        }
+        if(data.consent === false){
+            setMessage("You must provide consent in order to enter the triage.");
+            return
+        } else if ( data.ED === "Select the emergency department you'd like to attend"){
+            setMessage("You must select a hospital to enter the triage.");
+            return
+        }
         axios
-            .post('http://localhost:8000/enter', { symptoms })
+            .post('http://localhost:8000/triage/triage-tickets', data)
             .then(response => {
                 setMessage(response.data.message);
                 const { symptoms } = response.data;
@@ -584,7 +659,8 @@ function EnterVirtualTriage() {
                     </Row>
                 </Container>
                 <Row>
-                    <Button variant="light" onClick={handleEnter} className="px-4 py-2">Enter</Button>{' '}
+                    {message && <p>{message}</p>}
+                    <Button variant="light" onClick={handleEnter}>Enter</Button>{' '}
                 </Row>
             </div>
         </div>

@@ -63,8 +63,6 @@ class substanceHabits( BaseModel ):
     drugs: bool
 
 class VTTicket( BaseModel ):
-    ticketID: int
-    userID: int
     ED: object
     durationOfSymptoms: object
     listAllergies: object
