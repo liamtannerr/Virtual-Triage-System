@@ -18,7 +18,7 @@ function Login() {
     const handleLogin = () => {
         // Send login request to the backend
         axios
-            .post('http://localhost:8000/login', { email, password })
+            .post('http://localhost:8000/auth/login', { email, password })
             .then(response => {
                 setMessage(response.data.message);
                 const { username, email, token } = response.data;

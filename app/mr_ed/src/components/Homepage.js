@@ -7,7 +7,7 @@ function Homepage() {
     const [userData, setUserData] = useState(null);
     useEffect(() => {
         // Fetch user data from the API endpoint
-        fetch('http://localhost:8000/api/user', {
+        fetch('http://localhost:8000/auth/user', {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
