@@ -28,8 +28,116 @@ function Register() {
     const navigate = useNavigate();
     const [userType, setUserType] = useState(1);
 
+
+    const validateFields = () => {
+        const nameRegex = /^[A-Za-z]+ [A-Za-z]+$/;
+        const dobRegex = /^\d{4}\/\d{2}\/\d{2}$/;
+        const postalCodeRegex = /^[A-Za-z]\d[A-Za-z] \d[A-Za-z]\d$/;
+        const healthNumberRegex = /^\d{9}$/;
+        const emailRegex = /.+@.+\..+/;
+        const alphabetAndSpacesRegex = /^[A-Za-z\s]+$/; 
+    
+        if (!name) {
+            setMessage("Name is required.");
+            return false;
+        }
+        if (!nameRegex.test(name)) {
+            setMessage("Name should contain only alphabetical letters. First and last name should be provided.");
+            return false;
+        }
+        if (!dateOfBirth) {
+            setMessage("Date of Birth is required.");
+            return false;
+        }
+        if (!dobRegex.test(dateOfBirth)) {
+            setMessage("Date of Birth must be in the format YYYY/MM/DD with a valid year, month, and day.");
+            return false;
+        }
+        const [year, month, day] = dateOfBirth.split('/').map(Number);
+
+        // Year check
+        if (year > 2024) {
+            setMessage("Year must before 2024.");
+            return false;
+        }
+
+        // Month check
+        if (month < 1 || month > 12) {
+            setMessage("Month must be between 01 and 12.");
+            return false;
+        }
+
+        // Day check
+        if (day < 1 || day > 31) {
+            setMessage("Day must be between 01 and 31.");
+            return false;
+        }
+        if (!gender) {
+            setMessage("Please select a gender.");
+            return false;
+        }
+        if (!streetAddress) {
+            setMessage("Street Address is required.");
+            return false;
+        }
+        if (!city) {
+            setMessage("City is required.");
+            return false;
+        }
+        if (!alphabetAndSpacesRegex.test(city)) {
+            setMessage("City should contain only alphabetical letters.");
+            return false;
+        }
+        if (!province) {
+            setMessage("Province is required.");
+            return false;
+        }
+        if (!alphabetAndSpacesRegex.test(province)) {
+            setMessage("Province should contain only alphabetical letters.");
+            return false;
+        }
+        if (!country) {
+            setMessage("Country is required.");
+            return false;
+        }
+        if (!alphabetAndSpacesRegex.test(country)) {
+            setMessage("Country should contain only alphabetical letters.");
+            return false;
+        }
+        if (!postalCode) {
+            setMessage("Postal Code is required.");
+            return false;
+        }
+        if (!postalCodeRegex.test(postalCode)) {
+            setMessage("Postal Code must be in the format A1A 1A1.");
+            return false;
+        }
+        if (!healthNumber) {
+            setMessage("Health Number is required.");
+            return false;
+        }
+        if (!healthNumberRegex.test(healthNumber)) {
+            setMessage("Health Number must be exactly 9 digits.");
+            return false;
+        }
+        if (!email) {
+            setMessage("Email is required.");
+            return false;
+        }
+        if (!emailRegex.test(email)) {
+            setMessage("Email must contain an '.' and '@'.");
+            return false;
+        }
+        if (!password) {
+            setMessage("Password is required.");
+            return false;
+        }
+        return true;
+    };
    
     const handleRegister = () => {
+        if (!validateFields()) return;
+
         // Send registration request to the backend
         axios
             .post('http://localhost:8000/auth/register', { name, dateOfBirth, gender, streetAddress, city, province, country, postalCode, healthNumber, email, password, userType})
@@ -81,8 +189,8 @@ function Register() {
                             <InputGroup className="mb-3">
                                 <InputGroup.Text id="basic-addon1"></InputGroup.Text>
                                 <Form.Control
-                                    placeholder="Date of Birth (YYYY-MM-DD)"
-                                    aria-label="Date of Birth (YYYY-MM-DD)"
+                                    placeholder="Date of Birth (YYYY/MM/DD)"
+                                    aria-label="Date of Birth (YYYY/MM/DD)"
                                     aria-describedby="basic-addon1"
                                     onChange={e => setDateOfBirth(e.target.value)}
                                 />
@@ -90,8 +198,8 @@ function Register() {
                         </Col>
                     </Row>
                     <Row className="align-items-center mb-3">
-                        <Col xs="auto" className="d-flex align-items-center justify-content-center">
-                            <h2 className="fs-6">Gender:</h2>
+                        <Col xs="auto">
+                            <span className="fs-6">Gender:</span>
                         </Col>
                         <Col>
                             <Form.Check

@@ -65,7 +65,6 @@ class substanceHabits( BaseModel ):
 class VTTicket( BaseModel ):
     ticketID: int
     user: str
-    user: str
     ED: object
     durationOfSymptoms: object
     listAllergies: object
