@@ -1,3 +1,11 @@
 .navbar {
-    background-color: blue;
+    background-color: #c5e0fc !important; /* Customize navbar background */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add subtle shadow */
+    margin-bottom: 10px;
 }
+
+.nav-link:hover {
+    border-radius: 5px;
+    background-color: #a9d2fd;
+}
+

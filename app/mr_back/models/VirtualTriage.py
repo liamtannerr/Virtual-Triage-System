@@ -64,7 +64,8 @@ class substanceHabits( BaseModel ):
 
 class VTTicket( BaseModel ):
     ticketID: int
-    userID: int
+    user: str
+    user: str
     ED: object
     durationOfSymptoms: object
     listAllergies: object
@@ -80,6 +81,3 @@ class VTTicket( BaseModel ):
     substanceHabits: substanceHabits
     consent: bool
     timestamp: object
-
-class VTQueue( BaseModel ):
-    queue: List[ VTTicket ]

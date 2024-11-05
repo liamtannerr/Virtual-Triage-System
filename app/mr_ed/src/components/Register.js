@@ -90,7 +90,7 @@ function Register() {
                         </Col>
                     </Row>
                     <Row className="align-items-center mb-3">
-                        <Col xs="auto">
+                        <Col xs="auto" className="d-flex align-items-center justify-content-center">
                             <h2 className="fs-6">Gender:</h2>
                         </Col>
                         <Col>
