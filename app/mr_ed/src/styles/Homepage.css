@@ -1,0 +1,25 @@
+h2 {
+    padding-top: 5vh;
+    font-size: x-large;
+}
+  
+.card {
+margin-top: 10px;
+border-width: 1px;
+border-color: #929caf6d;
+}
+
+.card-title {
+padding: 5px 5px 0px 5px;
+}
+
+.card-body {
+padding: 2px 5px;
+
+}
+
+.wait-time {
+color: darkslategray;
+font-weight: bold;
+padding: 5px;
+}
