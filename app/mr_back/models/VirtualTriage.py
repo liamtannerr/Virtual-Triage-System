@@ -65,10 +65,10 @@ class substanceHabits( BaseModel ):
 class VTTicket( BaseModel ):
     ticketID: int
     user: str
-    ED: object
-    durationOfSymptoms: object
-    listAllergies: object
-    pastMedicalConditions: object
+    ED: str
+    durationOfSymptoms: str
+    listAllergies: str
+    pastMedicalConditions: str
     generalSymptoms: generalSymptoms
     respiratorySymptoms: respiratorySymptoms
     gastrointestinalSymptoms: gastrointestinalSymptoms
