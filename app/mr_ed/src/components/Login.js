@@ -21,12 +21,20 @@ function Login() {
             .post('http://localhost:8000/auth/login', { email, password })
             .then(response => {
                 setMessage(response.data.message);
-                const { username, email, token } = response.data;
-                localStorage.setItem('username', username);
+                console.log(response)
+                const { email, token, user_type } = response.data;
                 localStorage.setItem('email', email);
                 localStorage.setItem('token', token);
-                // Redirect to homepage using navigate
-                navigate('/'); // Replace '/' with the homepage URL if needed
+                localStorage.setItem('user_type', user_type);
+                if(user_type === 1){
+                    navigate('/');
+                }
+                else if(user_type === 2){
+                    navigate('/nurseWaiting');
+                }
+                else if(user_type === 3){
+                    navigate('/'); // put doctorWaiting             
+                }
             })
             .catch(error => {
                 console.error(error);
@@ -49,8 +57,8 @@ function Login() {
                             <InputGroup className="mb-3">
                                 <InputGroup.Text id="basic-addon1"></InputGroup.Text>
                                 <Form.Control
-                                    placeholder="Username"
-                                    aria-label="Username"
+                                    placeholder="Email"
+                                    aria-label="Email"
                                     aria-describedby="basic-addon1"
                                     onChange={e => setEmail(e.target.value)}
                                 />

@@ -18,7 +18,6 @@ security = HTTPBearer()
 async def login_service( patientLogin: PatientLogin ):
     try:
         patient_data = users_collection.find_one( { 'email': patientLogin.email, 'password': patientLogin.password } )
-        
         if patient_data:
             token = generate_token( patientLogin.email )
             patient_data[ '_id' ] = str( patient_data[ '_id' ] )  # Convert ObjectId to string
@@ -54,7 +53,12 @@ async def get_user_service( token: str ):
         user_data = users_collection.find_one( { 'email': email } )
         
         if user_data:
-            return { 'email': user_data[ 'email' ] }
+            return { 
+                'email': user_data[ 'email' ],
+                'token': token,
+                'password': user_data[ 'password' ],
+                'user_type': user_data[ 'user_type' ] 
+            }
         
     except jwt.ExpiredSignatureError:
         raise HTTPException( status_code = 401, detail = 'Token expired' )
