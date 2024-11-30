@@ -56,10 +56,10 @@ function EnterVirtualTriage() {
         allergies: '',
         duration: '',
         pastMedical: '',
-        smoke: false,
-        alcohol: false,
-        drugs: false,
-        consent: false,
+        smoke: null,
+        alcohol: null,
+        drugs: null,
+        consent: null,
         emergencyDepartment: "Select the emergency department you'd like to attend",
     });
 
@@ -104,6 +104,8 @@ function EnterVirtualTriage() {
 
     const handleEnter = (event) => {
         const data = {
+            ticketID: 1,
+            user: "isaac",
             ED: symptoms.emergencyDepartment,
             durationOfSymptoms: symptoms.duration,
             listAllergies: symptoms.allergies,
@@ -172,19 +174,29 @@ function EnterVirtualTriage() {
             consent: symptoms.consent,
             timestamp: new Date().toISOString(),
         }
-        if(data.consent === false){
+        const emptyFields = (
+            data.substanceHabits.smoking == null ||
+            data.substanceHabits.alcohol == null ||
+            data.substanceHabits.drugs == null ||
+            data.durationOfSymptoms == "" ||
+            data.listAllergies == "" ||
+            data.pastMedicalConditions == "");
+        if(data.consent === null){
             setMessage("You must provide consent in order to enter the triage.");
             return
         } else if ( data.ED === "Select the emergency department you'd like to attend"){
             setMessage("You must select a hospital to enter the triage.");
             return
+        } else if (emptyFields){
+            setMessage("Please complete all fields.")
+            return
         }
         axios
-            .post('http://localhost:8000/triage/triage-tickets', data)
+            .post('http://localhost:8000/triage/tickets', data)
             .then(response => {
+                console.log(response)
                 setMessage(response.data.message);
-                const { symptoms } = response.data;
-                // Redirect to homepage using navigate
+                const obj = response.data
                 navigate('/patientWaiting'); // Replace '/' with the homepage URL if needed
             })
             .catch(error => {
