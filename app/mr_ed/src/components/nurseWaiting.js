@@ -1,6 +1,7 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { Row, Col, Form, Button } from 'react-bootstrap';
+import { ClipLoader } from 'react-spinners';
 
 const NurseWaiting = () => {
   const [tickets, setTickets] = useState([]);
@@ -45,7 +46,13 @@ const NurseWaiting = () => {
   );
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="patient-waiting" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', textAlign: 'center' }}>
+        <h1>Nurse Waiting Screen</h1>
+        <p>Please wait for incoming patient triage forms.</p>
+        <ClipLoader color="#3498db" loading={true} size={150} />
+      </div>
+    );
   }
 
   if (selectedTicket) {
