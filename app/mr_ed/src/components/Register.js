@@ -137,8 +137,6 @@ function Register() {
    
     const handleRegister = () => {
         if (!validateFields()) return;
-
-        // Send registration request to the backend
         axios
             .post('http://localhost:8000/auth/register', { name, dateOfBirth, gender, streetAddress, city, province, country, postalCode, healthNumber, email, password, userType})
             .then(response => {

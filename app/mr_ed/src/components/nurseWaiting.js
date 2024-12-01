@@ -1,26 +1,45 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { Row, Col, Form, Button } from 'react-bootstrap';
+import Modal from 'react-bootstrap/Modal';
+import { useNavigate } from 'react-router-dom';
+
 
 const NurseWaiting = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [priority, setPriority] = useState(1);
+  const navigate = useNavigate();
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem('user_type') != 2) {
+      setShow(true);
+    }
+  }, []);
+
+  const handleHomepage = () => {
+    navigate('/');
+  }
+
+  const handleLogin = () => {
+    navigate('/login');
+  }
 
   const createMedicalTicket = () => {
     const data = {
       'VTticketID': selectedTicket.ticketID,
-      'priority': parseInt( priority ),
+      'priority': parseInt(priority),
       'startTime': new Date().toString()
     }
-    console.log( data )
-    axios.post( 'http://localhost:8000/medical/ticket', data )
-    .then(response => {
-      console.log("Ticket created:", response.data);
-      setSelectedTicket(null);
-    })
-    .catch(error => console.error("Error creating ticket:", error));
+    console.log(data)
+    axios.post('http://localhost:8000/medical/ticket', data)
+      .then(response => {
+        console.log("Ticket created:", response.data);
+        setSelectedTicket(null);
+      })
+      .catch(error => console.error("Error creating ticket:", error));
   }
 
   useEffect(() => {
@@ -38,7 +57,7 @@ const NurseWaiting = () => {
         <Row>
           <Col key={symptom}>
             {symptom}: {value ? "Yes" : "No"}
-         </Col>
+          </Col>
         </Row>
       ))}
     </div>
@@ -61,9 +80,9 @@ const NurseWaiting = () => {
             width: '80%',
             textAlign: 'center',
             transition: 'transform 0.2s, background-color 0.2s',
-            }}>
-              <h2>Ticket Details</h2>
-              <p><strong>Ticket ID:</strong> {selectedTicket.ticketID}</p>
+          }}>
+            <h2>Ticket Details</h2>
+            <p><strong>Ticket ID:</strong> {selectedTicket.ticketID}</p>
             <p><strong>User:</strong> {selectedTicket.user}</p>
             <p><strong>Emergency Department:</strong> {selectedTicket.ED}</p>
             <p><strong>Duration of Symptoms:</strong> {selectedTicket.durationOfSymptoms}</p>
@@ -101,7 +120,7 @@ const NurseWaiting = () => {
             <p><strong>Timestamp:</strong> {new Date(selectedTicket.timestamp).toLocaleString()}</p>
 
             <p><strong>Select the priority:</strong></p>
-            <Form.Select value={ priority } onChange={ (e) => setPriority( e.target.value ) }>
+            <Form.Select value={priority} onChange={(e) => setPriority(e.target.value)}>
               <option value="1">High</option>
               <option value="2">Medium</option>
               <option value="3">Low</option>
@@ -142,6 +161,27 @@ const NurseWaiting = () => {
           </div>
         ))}
       </div>
+      <Modal
+        show={show}
+        onHide={handleLogin}
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header>
+          <Modal.Title>Unauthorized</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          You aren't allowed to access this page.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleHomepage}>
+            Return to Homepage
+          </Button>
+          <Button variant="primary" onClick={handleLogin}>
+            Login
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
