@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Form from 'react-bootstrap/Form';
@@ -8,9 +8,12 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
 import Dropdown from 'react-bootstrap/Dropdown';
+import Modal from 'react-bootstrap/Modal';
+
 
 function EnterVirtualTriage() {
     const navigate = useNavigate();
+    const [show, setShow] = useState(false);
     const [message, setMessage] = useState('');
     const [symptoms, setSymptoms] = useState({
         fever: false,
@@ -111,65 +114,65 @@ function EnterVirtualTriage() {
             listAllergies: symptoms.allergies,
             pastMedicalConditions: symptoms.pastMedical,
             generalSymptoms: {
-              fever: symptoms.fever,
-              chills: symptoms.chills,
-              fatigue: symptoms.fatigue,
-              weakness: symptoms.weakness,
-              weightChange: symptoms.weightChange,
-              nightSweats: symptoms.nightSweats,
+                fever: symptoms.fever,
+                chills: symptoms.chills,
+                fatigue: symptoms.fatigue,
+                weakness: symptoms.weakness,
+                weightChange: symptoms.weightChange,
+                nightSweats: symptoms.nightSweats,
             },
             respiratorySymptoms: {
-              cough: symptoms.cough,
-              shortnessOfBreath: symptoms.shortnessOfBreath,
-              wheezing: symptoms.wheezing,
-              soreThroat: symptoms.soreThroat,
-              nasalCongestion: symptoms.nasalCongestion,
-              chestPain: symptoms.chestPain,
+                cough: symptoms.cough,
+                shortnessOfBreath: symptoms.shortnessOfBreath,
+                wheezing: symptoms.wheezing,
+                soreThroat: symptoms.soreThroat,
+                nasalCongestion: symptoms.nasalCongestion,
+                chestPain: symptoms.chestPain,
             },
             gastrointestinalSymptoms: {
-              nausea: symptoms.nausea,
-              vomiting: symptoms.vomiting,
-              diarrhea: symptoms.diarrhea,
-              constipation: symptoms.constipation,
-              abdominalPain: symptoms.abdominalPain,
-              appetiteLoss: symptoms.lossOfAppetite,
+                nausea: symptoms.nausea,
+                vomiting: symptoms.vomiting,
+                diarrhea: symptoms.diarrhea,
+                constipation: symptoms.constipation,
+                abdominalPain: symptoms.abdominalPain,
+                appetiteLoss: symptoms.lossOfAppetite,
             },
             neurologicalSymptoms: {
-              headache: symptoms.headache,
-              dizziness: symptoms.dizziness,
-              numbness: symptoms.numbness,
-              confusion: symptoms.confusion,
-              memoryLoss: symptoms.memoryLoss,
-              seizures: symptoms.seizures,
+                headache: symptoms.headache,
+                dizziness: symptoms.dizziness,
+                numbness: symptoms.numbness,
+                confusion: symptoms.confusion,
+                memoryLoss: symptoms.memoryLoss,
+                seizures: symptoms.seizures,
             },
             musculoskeletalSymptoms: {
-              jointPain: symptoms.jointPain,
-              musclePain: symptoms.musclePain,
-              stiffness: symptoms.stiffness,
-              backPain: symptoms.backPain,
+                jointPain: symptoms.jointPain,
+                musclePain: symptoms.musclePain,
+                stiffness: symptoms.stiffness,
+                backPain: symptoms.backPain,
             },
             cardiovascularSymptoms: {
-              palpitations: symptoms.palpitations,
-              swellinglegsAnkles: symptoms.swelling,
-              chestPain: symptoms.chestPain,
-              acceleratedHeartbeat: symptoms.fastHeartrate
+                palpitations: symptoms.palpitations,
+                swellinglegsAnkles: symptoms.swelling,
+                chestPain: symptoms.chestPain,
+                acceleratedHeartbeat: symptoms.fastHeartrate
             },
             skinSymptoms: {
-              rash: symptoms.rash,
-              itching: symptoms.itching,
-              bruising: symptoms.skinColorChange,
-              wounds: symptoms.wounds,
+                rash: symptoms.rash,
+                itching: symptoms.itching,
+                bruising: symptoms.skinColorChange,
+                wounds: symptoms.wounds,
             },
             psychologicalSymptoms: {
-              anxiety: symptoms.anxiety,
-              depression: symptoms.depression,
-              moodSwings: symptoms.moodSwings,
-              sleepPatternChanges: symptoms.sleepChanges
+                anxiety: symptoms.anxiety,
+                depression: symptoms.depression,
+                moodSwings: symptoms.moodSwings,
+                sleepPatternChanges: symptoms.sleepChanges
             },
             substanceHabits: {
-              alcohol: symptoms.alcohol,
-              smoking: symptoms.smoke,
-              drugs: symptoms.drugs,
+                alcohol: symptoms.alcohol,
+                smoking: symptoms.smoke,
+                drugs: symptoms.drugs,
             },
             consent: symptoms.consent,
             timestamp: new Date().toISOString(),
@@ -181,13 +184,13 @@ function EnterVirtualTriage() {
             data.durationOfSymptoms == "" ||
             data.listAllergies == "" ||
             data.pastMedicalConditions == "");
-        if(data.consent === null){
+        if (data.consent === null) {
             setMessage("You must provide consent in order to enter the triage.");
             return
-        } else if ( data.ED === "Select the emergency department you'd like to attend"){
+        } else if (data.ED === "Select the emergency department you'd like to attend") {
             setMessage("You must select a hospital to enter the triage.");
             return
-        } else if (emptyFields){
+        } else if (emptyFields) {
             setMessage("Please complete all fields.")
             return
         }
@@ -197,6 +200,7 @@ function EnterVirtualTriage() {
                 console.log(response)
                 setMessage(response.data.message);
                 const obj = response.data
+                localStorage.setItem('inTriage', 1);
                 navigate('/patientWaiting'); // Replace '/' with the homepage URL if needed
             })
             .catch(error => {
@@ -204,6 +208,21 @@ function EnterVirtualTriage() {
                 setMessage(error.response?.data?.detail || 'Error registering. Please try again.');
             });
     };
+
+    useEffect(() => {
+        if (localStorage.getItem('user_type') != 1) {
+            setShow(true);
+        }
+    }, []);
+
+    const handleHomepage = () => {
+        navigate('/');
+    }
+
+    const handleLogin = () => {
+        navigate('/login');
+    }
+
     return (
         <div>
             <Container>
@@ -674,6 +693,27 @@ function EnterVirtualTriage() {
                     {message && <p>{message}</p>}
                     <Button variant="light" onClick={handleEnter}>Enter</Button>{' '}
                 </Row>
+                <Modal
+                    show={show}
+                    onHide={handleLogin}
+                    backdrop="static"
+                    keyboard={false}
+                >
+                    <Modal.Header>
+                        <Modal.Title>Unauthorized</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        You aren't allowed to access this page.
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={handleHomepage}>
+                            Return to Homepage
+                        </Button>
+                        <Button variant="primary" onClick={handleLogin}>
+                            Login
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
             </div>
         </div>
     );

@@ -2,12 +2,31 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { Row, Col, Form, Button } from 'react-bootstrap';
 import { ClipLoader } from 'react-spinners';
+import Modal from 'react-bootstrap/Modal';
+import { useNavigate } from 'react-router-dom';
+
 
 const NurseWaiting = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [priority, setPriority] = useState(1);
+  const navigate = useNavigate();
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem('user_type') != 2) {
+      setShow(true);
+    }
+  }, []);
+
+  const handleHomepage = () => {
+    navigate('/');
+  }
+
+  const handleLogin = () => {
+    navigate('/login');
+  }
 
   const createMedicalTicket = () => {
     const medicalTicket = {
@@ -39,7 +58,7 @@ const NurseWaiting = () => {
         <Row>
           <Col key={symptom}>
             {symptom}: {value ? "Yes" : "No"}
-         </Col>
+          </Col>
         </Row>
       ))}
     </div>
@@ -155,6 +174,27 @@ const NurseWaiting = () => {
           </div>
         ))}
       </div>
+      <Modal
+        show={show}
+        onHide={handleLogin}
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header>
+          <Modal.Title>Unauthorized</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          You aren't allowed to access this page.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleHomepage}>
+            Return to Homepage
+          </Button>
+          <Button variant="primary" onClick={handleLogin}>
+            Login
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

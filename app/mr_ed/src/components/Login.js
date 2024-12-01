@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Form from 'react-bootstrap/Form';
@@ -8,12 +8,14 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
+import Modal from 'react-bootstrap/Modal';
 
 
 function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
+    const [show, setShow] = useState(false);
     const navigate = useNavigate();
     const handleLogin = () => {
         // Send login request to the backend
@@ -26,13 +28,13 @@ function Login() {
                 localStorage.setItem('email', email);
                 localStorage.setItem('token', token);
                 localStorage.setItem('user_type', user_type);
-                if(user_type === 1){
+                if (user_type === 1) {
                     navigate('/');
                 }
-                else if(user_type === 2){
+                else if (user_type === 2) {
                     navigate('/nurseWaiting');
                 }
-                else if(user_type === 3){
+                else if (user_type === 3) {
                     navigate('/'); // put doctorWaiting             
                 }
             })
@@ -41,6 +43,22 @@ function Login() {
                 setMessage('Error logging in. Please try again.');
             });
     };
+
+    useEffect(() => {
+        if (localStorage.getItem('token')) {
+            setShow(true);
+        }
+    }, []);
+
+    const handleClose = () => {
+        navigate('/');
+    }
+
+    const handleRefresh = () => {
+        localStorage.clear();
+        window.location.reload();
+    }
+
     return (
         <div>
             <Container>
@@ -81,6 +99,27 @@ function Login() {
                 </Container>
                 <Button variant="light" onClick={handleLogin} >Login</Button>{' '}
                 {message && <p>{message}</p>}
+                <Modal
+                    show={show}
+                    onHide={handleClose}
+                    backdrop="static"
+                    keyboard={false}
+                >
+                    <Modal.Header>
+                        <Modal.Title>Already Logged In</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        You are already logged into Mr. ED.
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={handleRefresh}>
+                            Refresh and log out
+                        </Button>
+                        <Button variant="primary" onClick={handleClose}>
+                            Return to Homepage
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
             </div>
         </div>
     );
