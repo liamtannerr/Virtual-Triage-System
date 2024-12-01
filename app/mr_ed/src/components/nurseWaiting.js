@@ -67,8 +67,8 @@ const NurseWaiting = () => {
             <p><strong>User:</strong> {selectedTicket.user}</p>
             <p><strong>Emergency Department:</strong> {selectedTicket.ED}</p>
             <p><strong>Duration of Symptoms:</strong> {selectedTicket.durationOfSymptoms}</p>
-            <p><strong>Allergies:</strong> {selectedTicket.listAllergies.join(', ')}</p>
-            <p><strong>Past Medical Conditions:</strong> {selectedTicket.pastMedicalConditions.join(', ')}</p>
+            <p><strong>Allergies:</strong> {Array.isArray(selectedTicket.listAllergies) ? selectedTicket.listAllergies.join(', ') : selectedTicket.listAllergies}</p>
+            <p><strong>Past Medical Conditions:</strong> {Array.isArray(selectedTicket.pastMedicalConditions) ? selectedTicket.pastMedicalConditions.join(', ') : selectedTicket.pastMedicalConditions}</p>
 
             <h3>General Symptoms</h3>
             {renderSymptoms(selectedTicket.generalSymptoms)}
