@@ -3,6 +3,7 @@ from api.auth_routes import router as auth_router
 from fastapi.middleware.cors import CORSMiddleware
 from api.triage_routes import router as triage_router
 from api.medical_routes import router as medical_router
+from api.department_routes import router as department_router
 
 app = FastAPI()
 
@@ -24,6 +25,7 @@ app.add_middleware(
 app.include_router( auth_router, prefix="/auth" )
 app.include_router( triage_router, prefix="/triage")
 app.include_router( medical_router, prefix="/medical")
+app.include_router(department_router, prefix="/emergency")
 
 
 @app.get( '/' )

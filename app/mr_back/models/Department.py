@@ -1,8 +1,7 @@
 from pydantic import BaseModel
 
-class Department:
+class Department(BaseModel):
     establishmentID: int
     address: str
-    maximumCapacity: int
-    currentLoad: int
     name: str
+    currentLoad: int
