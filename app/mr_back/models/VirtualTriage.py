@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List
+from .Department import Department
 
 class generalSymptoms( BaseModel ):
     fever: bool
@@ -65,7 +66,7 @@ class substanceHabits( BaseModel ):
 class VTTicket( BaseModel ):
     ticketID: int
     user: str
-    ED: str
+    ED: int
     durationOfSymptoms: str
     listAllergies: str
     pastMedicalConditions: str

@@ -4,18 +4,18 @@ from fastapi import HTTPException, status
 from typing import List
 
 # MongoDB connection
-uri = 'mongodb+srv://admin:admin@mrcluster.lrupm.mongodb.net/?retryWrites=true&w=majority&tlsAllowInvalidCertificates=true'
+uri = 'mongodb+srv://admin:admin@mrcluster.lrupm.mongodb.net/'
 client = MongoClient(uri)
 db = client['mr_data']
 ticket_collection = db['medicalTickets']
 user_collection = db['users']
 
-async def create_med_service( medTicket: MedicalTicket ):
+async def create_med_service( medTicket: MedicalTicket ) -> MedicalTicket:
+
     existing_ticket = ticket_collection.find_one(
         { 'VTticketID': medTicket.VTticketID }
     )
-
-    if existing_ticket:
+    if existing_ticket == None:
         raise HTTPException( status_code = status.HTTP_400_BAD_REQUEST, detail = "Ticket already exists" )
     
     ticketDict = medTicket.dict()
