@@ -10,8 +10,7 @@ router = APIRouter()
 async def create_med_ticket(med_ticket: MedicalTicket):
     return await create_med_service(med_ticket)
 
-@router.post("/tickets", response_model=List[MedicalTicket])
+@router.get("/tickets", response_model=List[MedicalTicket])
 async def get_medical_tickets():
     return await get_mt_service()
-
 
