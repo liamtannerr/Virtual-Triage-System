@@ -24,10 +24,11 @@ function Login() {
             .then(response => {
                 setMessage(response.data.message);
                 console.log(response)
-                const { email, token, user_type } = response.data;
+                const { email, token, user_type, name } = response.data;
                 localStorage.setItem('email', email);
                 localStorage.setItem('token', token);
                 localStorage.setItem('user_type', user_type);
+                localStorage.setItem('name', name);
                 if (user_type === 1) {
                     navigate('/');
                 }

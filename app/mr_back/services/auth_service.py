@@ -21,6 +21,7 @@ async def login_service( patientLogin: PatientLogin ):
         if patient_data:
             token = generate_token( patientLogin.email )
             patient_data[ '_id' ] = str( patient_data[ '_id' ] )  # Convert ObjectId to string
+            patient_data[ 'name' ] = str( patient_data[ 'name' ] )
             patient_data[ 'token' ] = token
             return patient_data
         

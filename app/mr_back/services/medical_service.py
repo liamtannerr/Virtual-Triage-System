@@ -15,7 +15,7 @@ async def create_med_service( medTicket: MedicalTicket ) -> MedicalTicket:
     existing_ticket = ticket_collection.find_one(
         { 'VTticketID': medTicket.VTticketID }
     )
-    if existing_ticket == None:
+    if existing_ticket:
         raise HTTPException( status_code = status.HTTP_400_BAD_REQUEST, detail = "Ticket already exists" )
     
     ticketDict = medTicket.dict()
@@ -29,3 +29,12 @@ async def get_mt_service() -> List[MedicalTicket]:
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
+async def delete_ticket(ticket_id: int) -> dict:
+    try:
+        result = ticket_collection.delete_one({"VTticketID": ticket_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
+        return {"message": "Ticket deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+

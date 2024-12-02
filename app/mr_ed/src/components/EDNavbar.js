@@ -5,6 +5,12 @@ import Container from 'react-bootstrap/Container';
 import '../styles/EDNavbar.css'
 
 function EDNavbar() {
+
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
+
     return (
         <Navbar expand="lg">
         <Container>
@@ -19,6 +25,7 @@ function EDNavbar() {
               <Nav.Link href="/nurseWaiting">Nurse Waiting</Nav.Link>
               <Nav.Link href="/enter">Enter Virtual Triage</Nav.Link>
               <Nav.Link href="/doctorWaiting">Doctor Waiting</Nav.Link>
+              <Nav.Link as='div' onClick={handleLogout}>Logout</Nav.Link>
             </Nav>
           </Navbar.Collapse>
         </Container>

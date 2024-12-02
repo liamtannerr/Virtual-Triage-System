@@ -22,6 +22,7 @@ class UserResponse( BaseModel ):
     password: str
     user_type: int
     token: str
+    name: str
 
 class UserType( BaseModel ):
     user_type: int
