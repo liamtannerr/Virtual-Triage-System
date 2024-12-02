@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Form from 'react-bootstrap/Form';
@@ -8,12 +8,9 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
 import Dropdown from 'react-bootstrap/Dropdown';
-import Modal from 'react-bootstrap/Modal';
-
 
 function EnterVirtualTriage() {
     const navigate = useNavigate();
-    const [show, setShow] = useState(false);
     const [message, setMessage] = useState('');
     const [symptoms, setSymptoms] = useState({
         fever: false,
@@ -155,7 +152,7 @@ function EnterVirtualTriage() {
                 palpitations: symptoms.palpitations,
                 swellinglegsAnkles: symptoms.swelling,
                 chestPain: symptoms.chestPain,
-                acceleratedHeartbeat: symptoms.fastHeartrate
+                acceleratedHeartbeat: symptoms.fastHeartrate,
             },
             skinSymptoms: {
                 rash: symptoms.rash,
@@ -167,7 +164,7 @@ function EnterVirtualTriage() {
                 anxiety: symptoms.anxiety,
                 depression: symptoms.depression,
                 moodSwings: symptoms.moodSwings,
-                sleepPatternChanges: symptoms.sleepChanges
+                sleepPatternChanges: symptoms.sleepChanges,
             },
             substanceHabits: {
                 alcohol: symptoms.alcohol,
@@ -176,53 +173,42 @@ function EnterVirtualTriage() {
             },
             consent: symptoms.consent,
             timestamp: new Date().toISOString(),
-        }
+        };
+    
         const emptyFields = (
             data.substanceHabits.smoking == null ||
             data.substanceHabits.alcohol == null ||
             data.substanceHabits.drugs == null ||
-            data.durationOfSymptoms == "" ||
-            data.listAllergies == "" ||
-            data.pastMedicalConditions == "");
+            data.durationOfSymptoms === "" ||
+            data.listAllergies === "" ||
+            data.pastMedicalConditions === ""
+        );
+    
         if (data.consent === null) {
-            setMessage("You must provide consent in order to enter the triage.");
-            return
+            setMessage("You must provide consent to enter the triage.");
+            return;
         } else if (data.ED === "Select the emergency department you'd like to attend") {
             setMessage("You must select a hospital to enter the triage.");
-            return
+            return;
         } else if (emptyFields) {
-            setMessage("Please complete all fields.")
-            return
+            setMessage("Please complete all fields.");
+            return;
         }
+    
         axios
-            .post('http://localhost:8000/triage/tickets', data)
-            .then(response => {
-                console.log(response)
+            .post("http://localhost:8000/triage/tickets", data)
+            .then((response) => {
+                console.log(response);
                 setMessage(response.data.message);
-                const obj = response.data
-                localStorage.setItem('inTriage', 1);
-                navigate('/patientWaiting'); // Replace '/' with the homepage URL if needed
+                const obj = response.data;
+                localStorage.setItem("inTriage", 1);
+                navigate("/patientWaiting");
             })
-            .catch(error => {
+            .catch((error) => {
                 console.error(error);
-                setMessage(error.response?.data?.detail || 'Error registering. Please try again.');
+                setMessage(error.response?.data?.detail || "Error registering. Please try again.");
             });
     };
-
-    useEffect(() => {
-        if (localStorage.getItem('user_type') != 1) {
-            setShow(true);
-        }
-    }, []);
-
-    const handleHomepage = () => {
-        navigate('/');
-    }
-
-    const handleLogin = () => {
-        navigate('/login');
-    }
-
     return (
         <div>
             <Container>
@@ -235,23 +221,37 @@ function EnterVirtualTriage() {
             <div>
                 <Container>
                     <Row>
-                        <Dropdown>
+                    <Dropdown>
                             <Dropdown.Toggle variant="secondary" id="dropdown-basic">
-                                {symptoms.emergencyDepartment}
+                                {symptoms.emergencyDepartment === "Select the emergency department you'd like to attend"
+                                    ? symptoms.emergencyDepartment
+                                    : symptoms.emergencyDepartment === 1
+                                    ? "Royal Jubilee Hospital"
+                                    : "Victoria General Hospital"}
                             </Dropdown.Toggle>
                             <Dropdown.Menu>
                                 <Dropdown.Item
-                                    onClick={(event) => handleDropdown(event, "Victoria General Hosptial")}
-                                    id="emergencyDepartment">
+                                    onClick={() =>
+                                        setSymptoms((prevState) => ({
+                                            ...prevState,
+                                            emergencyDepartment: 2,
+                                        }))
+                                    }
+                                >
                                     Victoria General Hospital
                                 </Dropdown.Item>
                                 <Dropdown.Item
-                                    onClick={(event) => handleDropdown(event, "Royal Jubilee Hospital")}
-                                    id="emergencyDepartment">
-                                    Royal Jubiliee Hospital
+                                    onClick={() =>
+                                        setSymptoms((prevState) => ({
+                                            ...prevState,
+                                            emergencyDepartment: 1,
+                                        }))
+                                    }
+                                >
+                                    Royal Jubilee Hospital
                                 </Dropdown.Item>
                             </Dropdown.Menu>
-                        </Dropdown>
+                    </Dropdown>
                     </Row>
                     <Row className="py-3">
                         <p>Please check all the symptoms you're currently experiencing:</p>
@@ -693,27 +693,6 @@ function EnterVirtualTriage() {
                     {message && <p>{message}</p>}
                     <Button variant="light" onClick={handleEnter}>Enter</Button>{' '}
                 </Row>
-                <Modal
-                    show={show}
-                    onHide={handleLogin}
-                    backdrop="static"
-                    keyboard={false}
-                >
-                    <Modal.Header>
-                        <Modal.Title>Unauthorized</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                        You aren't allowed to access this page.
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button variant="secondary" onClick={handleHomepage}>
-                            Return to Homepage
-                        </Button>
-                        <Button variant="primary" onClick={handleLogin}>
-                            Login
-                        </Button>
-                    </Modal.Footer>
-                </Modal>
             </div>
         </div>
     );

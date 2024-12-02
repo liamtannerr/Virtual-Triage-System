@@ -35,7 +35,7 @@ function Login() {
                     navigate('/nurseWaiting');
                 }
                 else if (user_type === 3) {
-                    navigate('/'); // put doctorWaiting             
+                    navigate('/doctorWaiting');
                 }
             })
             .catch(error => {

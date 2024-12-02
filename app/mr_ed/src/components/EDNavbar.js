@@ -18,6 +18,7 @@ function EDNavbar() {
               <Nav.Link href="/patientWaiting">Patient Waiting</Nav.Link>
               <Nav.Link href="/nurseWaiting">Nurse Waiting</Nav.Link>
               <Nav.Link href="/enter">Enter Virtual Triage</Nav.Link>
+              <Nav.Link href="/doctorWaiting">Doctor Waiting</Nav.Link>
             </Nav>
           </Navbar.Collapse>
         </Container>

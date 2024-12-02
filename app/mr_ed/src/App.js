@@ -7,6 +7,7 @@ import EDNavbar from './components/EDNavbar';
 import PatientWaiting from './components/patientWaiting';
 import NurseWaiting from './components/nurseWaiting';
 import EnterVirtualTriage from './components/EnterVirtualTriage';
+import DoctorWaiting from './components/doctorWaiting';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/patientWaiting" element={<PatientWaiting />} /> 
           <Route path="/nurseWaiting" element={<NurseWaiting />} />
           <Route path="/enter" element={<EnterVirtualTriage />} />
+          <Route path="/doctorWaiting" element={<DoctorWaiting />} />
         </Routes>
       </div>
     </Router>
