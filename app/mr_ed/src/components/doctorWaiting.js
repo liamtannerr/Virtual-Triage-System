@@ -4,6 +4,7 @@ import { Row, Col, Form, Button } from 'react-bootstrap';
 
 const DoctorWaiting = () => {
   const [medicalTickets, setMedicalTickets] = useState([]);
+  const [triageTickets, setTriageTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState(null);
 
@@ -14,6 +15,15 @@ const DoctorWaiting = () => {
         setLoading(false);
       })
       .catch(error => console.error("Error fetching medical tickets:", error));
+  }, []);
+
+  useEffect(() => {
+    axios.get('http://localhost:8000/triage/tickets')
+      .then(response => {
+        setTriageTickets(response.data);
+        setLoading(false);
+      })
+      .catch(error => console.error("Error fetching triage tickets:", error));
   }, []);
 
   const renderSymptoms = (symptoms) => (
@@ -51,8 +61,8 @@ const DoctorWaiting = () => {
             <p><strong>User:</strong> {selectedTicket.user}</p>
             <p><strong>Emergency Department:</strong> {selectedTicket.ED}</p>
             <p><strong>Duration of Symptoms:</strong> {selectedTicket.durationOfSymptoms}</p>
-            <p><strong>Allergies:</strong> {selectedTicket.listAllergies ? selectedTicket.listAllergies.join(', ') : 'None'}</p>
-            <p><strong>Past Medical Conditions:</strong> {selectedTicket.pastMedicalConditions ? selectedTicket.pastMedicalConditions.join(', ') : 'None'}</p>
+            <p><strong>Allergies:</strong> {Array.isArray(selectedTicket.listAllergies) ? selectedTicket.listAllergies.join(', ') : selectedTicket.listAllergies}</p>
+            <p><strong>Past Medical Conditions:</strong> {Array.isArray(selectedTicket.pastMedicalConditions) ? selectedTicket.pastMedicalConditions.join(', ') : selectedTicket.pastMedicalConditions}</p>
 
             <h3>General Symptoms</h3>
             {renderSymptoms(selectedTicket.generalSymptoms || {})}
@@ -95,7 +105,7 @@ const DoctorWaiting = () => {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '20px' }}>
       <h1 style={{ marginBottom: '20px' }}>Medical Tickets</h1>
       <div style={{ width: '80%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {medicalTickets.map(ticket => (
+        {triageTickets.map(ticket => (
           <div key={ticket.ticketID} style={{
             border: '1px solid #ccc',
             padding: '10px',
