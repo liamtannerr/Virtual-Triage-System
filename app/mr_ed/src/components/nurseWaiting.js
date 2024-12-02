@@ -29,6 +29,7 @@ const NurseWaiting = () => {
   }
 
   const createMedicalTicket = () => {
+    const ID = selectedTicket.ticketID;
     const medicalTicket = {
       'VTticketID': selectedTicket.ticketID,
       'priority': parseInt(priority),
