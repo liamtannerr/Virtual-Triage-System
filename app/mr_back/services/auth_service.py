@@ -58,7 +58,10 @@ async def get_user_service( token: str ):
                 'email': user_data[ 'email' ],
                 'token': token,
                 'password': user_data[ 'password' ],
-                'user_type': user_data[ 'user_type' ] 
+                'user_type': user_data[ 'user_type' ],
+                'name': user_data[ 'name' ],
+                'inTriage': user_data[ 'inTriage' ]
+
             }
         
     except jwt.ExpiredSignatureError:
@@ -73,3 +76,15 @@ def generate_token( email: str ) -> str:
     payload = { 'email': email }
     token = jwt.encode( payload, SECRET_KEY, algorithm='HS256' )
     return token
+
+async def update_user_service(user_email: str, inTriage: str):
+    user = users_collection.find_one({"email": user_email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    result = users_collection.update_one(
+        {"email": user_email},
+        {"$set": {"inTriage": inTriage}}
+    )
+
+    return {"message": "User status updated", "value": inTriage}

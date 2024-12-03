@@ -16,6 +16,7 @@ class PatientRegister( BaseModel ):
     healthNumber: str
     email: str
     password: str
+    inTriage: str
 
 class UserResponse( BaseModel ):
     email: str
@@ -23,6 +24,7 @@ class UserResponse( BaseModel ):
     user_type: int
     token: str
     name: str
+    inTriage: str
 
 class UserType( BaseModel ):
     user_type: int
