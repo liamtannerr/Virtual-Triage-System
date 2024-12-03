@@ -47,7 +47,6 @@ const PatientWaiting = () => {
             axios.get('http://localhost:8000/medical/tickets')
                 .then(response => {
                     setMedicalTickets(prevTickets => {
-                        //console.log("Fetched tickets:", response.data);
                         if (response.data.some(ticket => ticket.VTTicket.email === localStorage.email)) {
                             setTriageStatus("reviewed");
                             setIndex(response.data.findIndex(ticket => ticket.VTTicket.email === localStorage.email) + 1);
@@ -68,6 +67,8 @@ const PatientWaiting = () => {
                     const { email, token, user_type, name, inTriage } = response.data;
                     if (inTriage == "doctor")
                         setTriageStatus("ready")
+                    if (inTriage == "rejected")
+                        setTriageStatus("rejected")
                 })
                 .catch(error => console.error("Error fetching medical tickets:", error));
 
@@ -98,6 +99,13 @@ const PatientWaiting = () => {
                     <>
                         <h1>Waiting Room</h1>
                         <p>The doctor is ready to see you.</p>
+                        <Button variant="primary" onClick={handleAccept}>Accept</Button>
+                    </>
+                )}
+                {triageStatus === "rejected" && (
+                    <>
+                        <h1>Waiting Room</h1>
+                        <p>Please do not come to the hospital.</p>
                         <Button variant="primary" onClick={handleAccept}>Accept</Button>
                     </>
                 )}

@@ -42,40 +42,66 @@ const NurseWaiting = () => {
       VTTicket: selectedTicket
     };
 
-    console.log("Medical Ticket Payload:", medicalTicket);
+    if (priority == 10) {
+      console.log(selectedTicket);
+      axios
+        .put(
+          'http://localhost:8000/auth/user',
+          {
+            inTriage: "rejected",
+            user_email: selectedTicket.email
+          },
+          { headers: { "Content-Type": "application/json" } })
+        .then((response) => {
+          localStorage.inTriage = "rejected";
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+      axios.delete(`http://localhost:8000/triage/tickets/${selectedTicket.ticketID}`)
+        .then(response => {
+          window.location.reload();
+        })
+        .catch((error) => {
+          console.error(error);
+          setMessage(error.response?.data?.detail || "Error registering. Please try again.");
+        });
+    } else {
 
-    // Submit the medical ticket
-    axios.post('http://localhost:8000/medical/ticket', medicalTicket)
-      .then(response => {
-        console.log("Ticket created:", response.data);
-        // Update the currentLoad of the department
-        axios.put(
-          `http://localhost:8000/emergency/department/${selectedTicket.ED}/currentLoad`,
-          { increment: 1 },
-          { headers: { "Content-Type": "application/json" } }
-        )
-          .then(loadResponse => {
-            console.log("Department load updated:", loadResponse.data);
-          })
-          .catch(loadError => {
-            console.error("Error updating department load:", loadError.response?.data || loadError.message);
-          });
+      console.log("Medical Ticket Payload:", medicalTicket);
 
-        // Clear the selected ticket
-        setSelectedTicket(null);
-      })
-      .catch(error => {
-        console.error("Error creating ticket:", error.response?.data || error.message);
-      });
-    axios.delete(`http://localhost:8000/triage/tickets/${selectedTicket.ticketID}`)
-      .then(response => {
-        window.location.reload();
-      })
-      .catch((error) => {
-        console.error(error);
-        setMessage(error.response?.data?.detail || "Error registering. Please try again.");
-      });
+      // Submit the medical ticket
+      axios.post('http://localhost:8000/medical/ticket', medicalTicket)
+        .then(response => {
+          console.log("Ticket created:", response.data);
+          // Update the currentLoad of the department
+          axios.put(
+            `http://localhost:8000/emergency/department/${selectedTicket.ED}/currentLoad`,
+            { increment: 1 },
+            { headers: { "Content-Type": "application/json" } }
+          )
+            .then(loadResponse => {
+              console.log("Department load updated:", loadResponse.data);
+            })
+            .catch(loadError => {
+              console.error("Error updating department load:", loadError.response?.data || loadError.message);
+            });
 
+          // Clear the selected ticket
+          setSelectedTicket(null);
+        })
+        .catch(error => {
+          console.error("Error creating ticket:", error.response?.data || error.message);
+        });
+      axios.delete(`http://localhost:8000/triage/tickets/${selectedTicket.ticketID}`)
+        .then(response => {
+          window.location.reload();
+        })
+        .catch((error) => {
+          console.error(error);
+          setMessage(error.response?.data?.detail || "Error registering. Please try again.");
+        });
+    }
   };
 
   useEffect(() => {
