@@ -41,19 +41,33 @@ const DoctorWaiting = () => {
   );
 
   const handleMedicalTicket = () => {
+    axios
+      .put(
+        'http://localhost:8000/auth/user',
+        {
+          inTriage: "doctor",
+          user_email: selectedTicket.VTTicket.email
+        },
+        { headers: { "Content-Type": "application/json" } })
+      .then((response) => {
+        localStorage.inTriage = "doctor";
+      })
+      .catch((error) => {
+        console.error(error);
+      });
     axios.delete(`http://localhost:8000/medical/tickets/${selectedTicket.VTticketID}`)
-      .then(response => {        
+      .then(response => {
         axios.put(
-        `http://localhost:8000/emergency/department/${selectedTicket.ED}/currentLoad`,
-        { increment: -1 },
-        { headers: { "Content-Type": "application/json" } }
-      )
-        .then(loadResponse => {
-          console.log("Department load updated:", loadResponse.data);
-        })
-        .catch(loadError => {
-          console.error("Error updating department load:", loadError.response?.data || loadError.message);
-        });
+          `http://localhost:8000/emergency/department/${selectedTicket.VTTicket.ED}/currentLoad`,
+          { increment: -1 },
+          { headers: { "Content-Type": "application/json" } }
+        )
+          .then(loadResponse => {
+            console.log("Department load updated:", loadResponse.data);
+          })
+          .catch(loadError => {
+            console.error("Error updating department load:", loadError.response?.data || loadError.message);
+          });
         window.location.reload();
       })
       .catch((error) => {
@@ -82,7 +96,7 @@ const DoctorWaiting = () => {
           }}>
             <h3>Priority: {selectedTicket.priority}</h3>
             <p><strong>Ticket ID:</strong> {selectedTicket.VTTicket.ticketID}</p>
-            <p><strong>User:</strong> {selectedTicket.VTTicket.user}</p>
+            <p><strong>User:</strong> {selectedTicket.VTTicket.patient}</p>
             <p><strong>Emergency Department:</strong> {selectedTicket.VTTicket.ED}</p>
             <p><strong>Duration of Symptoms:</strong> {selectedTicket.VTTicket.durationOfSymptoms}</p>
             <p><strong>Allergies:</strong> {Array.isArray(selectedTicket.VTTicket.listAllergies) ? selectedTicket.VTTicket.listAllergies.join(', ') : selectedTicket.VTTicket.listAllergies}</p>

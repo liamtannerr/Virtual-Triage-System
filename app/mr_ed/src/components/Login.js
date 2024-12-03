@@ -24,11 +24,12 @@ function Login() {
             .then(response => {
                 setMessage(response.data.message);
                 console.log(response)
-                const { email, token, user_type, name } = response.data;
+                const { email, token, user_type, name, inTriage } = response.data;
                 localStorage.setItem('email', email);
                 localStorage.setItem('token', token);
                 localStorage.setItem('user_type', user_type);
                 localStorage.setItem('name', name);
+                localStorage.setItem('inTriage', inTriage);
                 if (user_type === 1) {
                     navigate('/');
                 }
@@ -43,6 +44,24 @@ function Login() {
                 console.error(error);
                 setMessage('Error logging in. Please try again.');
             });
+        if (localStorage.user_type === 1) {
+            axios
+                .put(
+                    'http://localhost:8000/auth/user',
+                    {
+                        inTriage: "true",
+                        user_email: email
+                    },
+                    { headers: { "Content-Type": "application/json" } })
+                .then((response) => {
+                    localStorage.setItem('inTriage', "true");
+                    navigate("/patientWaiting");
+                })
+                .catch((error) => {
+                    console.error(error);
+                    setMessage(error.response?.data?.detail || "Error registering. Please try again.");
+                });
+        }
     };
 
     useEffect(() => {

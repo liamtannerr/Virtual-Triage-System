@@ -114,8 +114,9 @@ function EnterVirtualTriage() {
     }
 
     const handleEnter = (event) => {
+        const id = Math.random()*1000
         const data = {
-            ticketID: 1,
+            ticketID: parseInt(id),
             email: String(localStorage.email),
             patient: String(localStorage.name),
             ED: symptoms.emergencyDepartment,
@@ -196,6 +197,8 @@ function EnterVirtualTriage() {
             data.pastMedicalConditions === ""
         );
 
+        console.log(localStorage.getItem('inTriage'));
+
         if (data.consent === null) {
             setMessage("You must provide consent to enter the triage.");
             return;
@@ -208,20 +211,38 @@ function EnterVirtualTriage() {
         } else if (tickets.some(ticket => ticket.user == localStorage.email)) {
             setMessage("You have already submitted a triage.");
             return;
+        } else if (localStorage.getItem('inTriage') === "true") {
+            setMessage("You have already submitted a triage.");
+            return;
         }
 
         axios
             .post("http://localhost:8000/triage/tickets", data)
             .then((response) => {
-                setMessage(response.data.message);
+            })
+            .catch((error) => {
+                console.error(error);
+                setMessage(error.response?.data?.detail || "Error registering. Please try again.");
+            });
+        axios
+            .put(
+                'http://localhost:8000/auth/user',
+                {
+                    inTriage: "true",
+                    user_email: localStorage.email
+                },
+                { headers: { "Content-Type": "application/json" } })
+            .then((response) => {
                 const obj = response.data;
-                localStorage.setItem("inTriage", 1);
+                console.log(obj)
+                localStorage.inTriage = true;
                 navigate("/patientWaiting");
             })
             .catch((error) => {
                 console.error(error);
                 setMessage(error.response?.data?.detail || "Error registering. Please try again.");
             });
+
     };
 
     useEffect(() => {
