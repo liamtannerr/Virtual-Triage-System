@@ -53,7 +53,7 @@ const NurseWaiting = () => {
           },
           { headers: { "Content-Type": "application/json" } })
         .then((response) => {
-          localStorage.inTriage = "rejected";
+          console.log(response)
         })
         .catch((error) => {
           console.error(error);
