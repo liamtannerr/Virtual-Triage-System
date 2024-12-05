@@ -137,14 +137,27 @@ function Register() {
    
     const handleRegister = () => {
         if (!validateFields()) return;
-        const inTriage = false;
+        const data = {
+            name: name,
+            dateOfBirth: dateOfBirth,
+            gender: gender,
+            streetAddress: streetAddress,
+            city: city,
+            province: province,
+            country: country,
+            postalCode: postalCode,
+            healthNumber: healthNumber,
+            email: email,
+            password: password,
+            user_type: 1,
+            inTriage: "false"
+        };
         axios
-            .post('http://localhost:8000/auth/register', { name, dateOfBirth, gender, streetAddress, city, province, country, postalCode, healthNumber, email, password, userType, inTriage})
+            .post('http://localhost:8000/auth/register', data)
             .then(response => {
                 setMessage(response.data.message);
-                const { email, token } = response.data;
-                // Redirect to homepage using navigate
-                navigate('/'); // Replace '/' with the homepage URL if needed
+                const { email, token, user_type, password, name, inTriage } = response.data;
+                navigate('/');
             })
             .catch(error => {
                 console.error(error);
