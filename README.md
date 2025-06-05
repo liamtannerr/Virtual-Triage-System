@@ -20,10 +20,6 @@ With emergency department waits often exceeding **8 hours** in BC, this system e
 - **Agile** methodologies, including iterative development and sprint planning  
 - **UML Diagrams** and **development patterns** to model system behavior and architecture
 
-  ## Demo
-
-Watch a short demo of the Virtual Triage System here: [Video Demo]([https://example.com/demo-link](https://www.youtube.com/watch?v=FPSUo2NT2v0))
-
 ## Project Team
 
 Developed by a cross-functional team as part of an Agile software development course. The project followed **industry-standard practices** including code reviews, feature planning, and iterative sprint cycles.
