@@ -18,7 +18,11 @@ With emergency department waits often exceeding **8 hours** in BC, this system e
 - **Bootstrap** for responsive UI components  
 - **GitHub** for version control and collaboration  
 - **Agile** methodologies, including iterative development and sprint planning  
-- **UML Diagrams** and **development patterns** to model system behavior and architecture  
+- **UML Diagrams** and **development patterns** to model system behavior and architecture
+
+  ## Demo
+
+Watch a short demo of the Virtual Triage System here: [Video Demo]([https://example.com/demo-link](https://www.youtube.com/watch?v=FPSUo2NT2v0))
 
 ## Project Team
 
