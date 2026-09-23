@@ -1,0 +1,24 @@
+# In Render: New > Blueprint, then select this repository and branch.
+services:
+  - type: web
+    name: mr-ed-api
+    runtime: python
+    plan: free
+    branch: security/fresh-mongodb-auth
+    rootDir: app/mr_back
+    buildCommand: pip install -r requirements.txt
+    startCommand: python render_start.py
+    healthCheckPath: /emergency/department
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.14.6
+      - key: APP_ENV
+        value: production
+      - key: MONGODB_DATABASE
+        value: virtual_triage
+      - key: SESSION_MINUTES
+        value: "60"
+      - key: MONGODB_URI
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
