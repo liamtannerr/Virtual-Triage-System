@@ -90,9 +90,8 @@ def test_expired_disabled_and_forged_sessions(client, db):
 
 
 @pytest.mark.parametrize('method,path', [('get', '/auth/user'), ('put', '/auth/user'), ('get', '/triage/tickets'),
-    ('post', '/triage/tickets'), ('put', '/triage/tickets/1'), ('delete', '/triage/tickets/1'),
-    ('get', '/medical/tickets'), ('get', '/medical/position'), ('post', '/medical/ticket'),
-    ('delete', '/medical/tickets/1'), ('put', '/emergency/department/1/currentLoad')])
+    ('post', '/triage/tickets'), ('put', '/triage/tickets/1'), ('post', '/triage/tickets/1/decline'), ('post', '/triage/tickets/1/approve'),
+    ('get', '/medical/tickets'), ('get', '/medical/position'), ('post', '/medical/tickets/1/call')])
 def test_all_sensitive_endpoints_require_session(client, method, path):
     assert client.request(method, path, json={}).status_code == 401
 
@@ -108,11 +107,11 @@ def test_patient_isolation_and_server_owned_identity(client, db):
     db.VTTickets.insert_one(other)
     assert len(client.get('/triage/tickets').json()) == 1
     assert client.post('/triage/tickets', json=ticket()).status_code == 409
-    assert client.delete('/triage/tickets/789').status_code == 403
+    assert client.post('/triage/tickets/789/decline').status_code == 403
     assert client.put('/triage/tickets/789', json=ticket()).status_code == 403
-    assert client.post('/medical/ticket', json={}).status_code == 403
-    assert client.put('/auth/user', json={'user_email': 'bob@example.com', 'inTriage': 'doctor'}).status_code == 403
-    assert client.put('/emergency/department/1/currentLoad', json={'increment': 1}).status_code == 403
+    assert client.post('/triage/tickets/789/approve', json={'priority': 2}).status_code == 403
+    assert client.put('/auth/user', json={'user_email': 'bob@example.com', 'inTriage': 'false'}).status_code == 403
+    assert client.post('/medical/tickets/789/call').status_code == 403
 
 
 def test_medical_records_filtered_and_queue_position_aggregate(client, db):
@@ -129,16 +128,39 @@ def test_staff_permissions_and_authoritative_medical_source(client, db):
     sign_in(client, db, role=2)
     source = ticket() | {'email': 'patient@example.com'}
     db.VTTickets.insert_one(source.copy())
-    response = client.post('/medical/ticket', json={'VTticketID': 123, 'priority': 2, 'startTime': '2026-01-01T00:00:00Z', 'VTTicket': ticket()})
+    db.users.insert_one({'email': source['email'], 'user_type': 1, 'inTriage': 'true'})
+    response = client.post('/triage/tickets/123/approve', json={'priority': 2})
     assert response.status_code == 200, response.text
-    assert response.json()['VTTicket']['email'] == 'patient@example.com'
-    assert client.delete('/medical/tickets/123').status_code == 403
-    assert client.put('/emergency/department/1/currentLoad', json={'increment': -1}).status_code == 403
-    assert client.delete('/triage/tickets/123').status_code == 200
+    assert db.medicalTickets.find_one()['VTTicket']['email'] == source['email']
+    assert db.VTTickets.count_documents({}) == 0
+    assert db.emergencyDepartments.find_one()['currentLoad'] == 1
+    assert client.post('/medical/tickets/123/call').status_code == 403
+    assert client.put('/auth/user', json={'user_email': source['email'], 'inTriage': 'false'}).status_code == 403
     client.cookies.clear()
     sign_in(client, db, role=3, email='doctor@example.com')
-    assert client.delete('/triage/tickets/123').status_code == 403
-    assert client.delete('/medical/tickets/123').status_code == 200
+    assert client.post('/triage/tickets/123/decline').status_code == 403
+    assert client.post('/triage/tickets/123/approve', json={'priority': 2}).status_code == 403
+    assert client.post('/medical/tickets/123/call').status_code == 200
+    assert db.medicalTickets.count_documents({}) == 0
+    assert db.emergencyDepartments.find_one()['currentLoad'] == 0
+    assert db.users.find_one({'email': source['email']})['inTriage'] == 'doctor'
+
+
+@pytest.mark.parametrize('body', [{'priority': 0}, {'priority': 10}, {'priority': '2'},
+    {'priority': True}, {'priority': 2, 'VTTicket': {}}, {'priority': 2, 'startTime': 'forged'}])
+def test_approval_validates_priority_and_rejects_client_records(client, db, body):
+    sign_in(client, db, role=2)
+    assert client.post('/triage/tickets/123/approve', json=body).status_code == 422
+    assert db.medicalTickets.count_documents({}) == 0
+
+
+@pytest.mark.parametrize('role', [2, 3])
+def test_partial_workflow_endpoints_are_removed(client, db, role):
+    sign_in(client, db, role=role)
+    for method, path in [('post', '/medical/ticket'), ('delete', '/triage/tickets/123'),
+                         ('delete', '/medical/tickets/123'), ('put', '/emergency/department/1/currentLoad')]:
+        assert client.request(method, path, json={}).status_code in (404, 405)
+    assert client.put('/auth/user', json={'user_email': 'alice@example.com', 'inTriage': 'doctor'}).status_code == 403
 
 
 @pytest.mark.parametrize('origin', ['https://attacker.example', 'null', ''])
@@ -217,17 +239,18 @@ def test_missing_consent_and_unknown_department_rejected(client, db):
 
 def test_patient_cannot_set_staff_status_or_acknowledge_pending_triage(client, db):
     sign_in(client, db)
-    for state in ('doctor', 'rejected', 'false'):
-        assert client.put('/auth/user', json={'user_email': 'alice@example.com', 'inTriage': state}).status_code == 403
+    for state in ('doctor', 'rejected'):
+        assert client.put('/auth/user', json={'user_email': 'alice@example.com', 'inTriage': state}).status_code == 422
+    assert client.put('/auth/user', json={'user_email': 'alice@example.com', 'inTriage': 'false'}).status_code == 403
     db.users.update_one({'email': 'alice@example.com'}, {'$set': {'inTriage': 'doctor'}})
     assert client.put('/auth/user', json={'user_email': 'alice@example.com', 'inTriage': 'false'}).status_code == 200
 
 
 def test_role_changes_take_effect_without_issuing_new_session(client, db):
     user = sign_in(client, db, role=2)
-    assert client.delete('/triage/tickets/999').status_code == 404
+    assert client.post('/triage/tickets/999/decline').status_code == 404
     db.users.update_one({'_id': user['_id']}, {'$set': {'user_type': 1}})
-    assert client.delete('/triage/tickets/999').status_code == 403
+    assert client.post('/triage/tickets/999/decline').status_code == 403
 
 
 def test_cors_allows_only_configured_origin(client):

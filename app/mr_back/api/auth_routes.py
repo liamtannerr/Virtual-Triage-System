@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr
 
 from config import get_settings
 from models.User import PatientRegister, PatientLogin, UserResponse
-from security import auth_rate_limit, current_user, issue_session, session_digest
+from security import auth_rate_limit, current_user, issue_session, session_digest, require_roles
 from services.auth_service import register_service, login_service, update_user_service
 
 router = APIRouter()
@@ -13,7 +13,7 @@ router = APIRouter()
 
 class TriageRequest(BaseModel):
     model_config = ConfigDict(extra='forbid')
-    inTriage: Literal['false', 'rejected', 'doctor']
+    inTriage: Literal['false']
     user_email: EmailStr
 
 
@@ -46,5 +46,5 @@ def logout(request: Request, response: Response):
 
 
 @router.put('/user')
-def update_user(data: TriageRequest, request: Request, user=Depends(current_user)):
+def update_user(data: TriageRequest, request: Request, user=Depends(require_roles(1))):
     return update_user_service(request.app.state.db, user, str(data.user_email).lower(), data.inTriage)

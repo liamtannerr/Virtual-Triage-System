@@ -19,7 +19,7 @@ docker compose up -d --wait
 
 `setup_local.py` creates `.env` and `app/mr_back/.env` with random credentials and file mode `0600`. Both are ignored by Git. It refuses to overwrite existing configuration. If configuration was already generated during this security update, skip that command.
 
-MongoDB listens only on `127.0.0.1:27017`. The Compose project `virtual-triage-fresh` has its own `fresh_mongodb` volume. The API uses `triage_app`, which has `readWrite` permission only on `virtual_triage`; the root credential is used only to initialize MongoDB. Editing an environment file does not change credentials inside an existing MongoDB volume.
+MongoDB listens only on `127.0.0.1:27017`. The Compose project `virtual-triage-fresh` has its own `fresh_mongodb` volume. The API uses `triage_app`, which has `readWrite` permission only on `virtual_triage`; the root credential stays in the MongoDB container for initialization and replica-set health checks. Editing an environment file does not change credentials inside an existing MongoDB volume.
 
 Start the backend in one terminal, from the repository root:
 
@@ -56,8 +56,8 @@ Passwords are prompted privately. These commands are run from the repository roo
 - Login and registration share a MongoDB-backed limit of 20 attempts per source IP per 15-minute window. TTL records expire automatically. Behind a reverse proxy, configure Uvicorn to trust forwarding headers only from the actual proxy. Do not trust arbitrary forwarded IPs. This baseline limit is not a substitute for deployment-level abuse monitoring.
 - Public registration can create only patients. Roles and initial triage state cannot be elevated through registration.
 - Patients see only their own triage/medical tickets. Queue position is returned as an aggregate without other patients' details. The server supplies ticket IDs, patient identity, and submission timestamps.
-- Nurses can review/edit/remove triage tickets and create medical tickets. Doctors can call patients and remove medical tickets. Medical records are copied from the stored triage record, not a supplied client record. Department load changes require the appropriate staff role and cannot go below zero.
-- Patient status changes are restricted to their own acknowledgement of a doctor call or rejection. Staff status changes require an existing corresponding patient ticket.
+- Nurses can edit, approve, or decline triage tickets. Doctors can call patients. Each staff workflow updates its tickets, patient status, and department load in one transaction. Medical records are copied from the stored triage record; the client sends only a ticket ID and approval priority. Raw ticket deletion, medical creation, and load adjustment endpoints have been removed.
+- The user update endpoint only lets patients acknowledge their own doctor call or rejection. Staff update patient status through the workflow endpoints.
 - MongoDB connections are centralized and validated. Remote/production connections require TLS and cannot disable certificate/hostname verification. Only local development permits MongoDB without TLS.
 - Unique indexes protect emails and active tickets. HTTP payloads are limited to 64 KiB. Request validation and database errors do not echo secrets or patient input. API responses use `Cache-Control: no-store` and security headers.
 - Frontend dependencies use Vite instead of the obsolete Create React App toolchain. Unused Next.js and other unused build dependencies were removed. `npm run build` still outputs `app/mr_ed/build`.
@@ -68,7 +68,25 @@ To revoke all sessions for an account:
 .venv/bin/python app/mr_back/manage.py revoke-sessions --email patient@example.com
 ```
 
-There is no public password recovery/email verification flow yet. Staff provisioning remains an administrative task. Queue transitions still span multiple database operations: failures may require staff reconciliation; this change does not introduce transactional clinical workflows.
+There is no public password recovery/email verification flow yet. Staff provisioning remains an administrative task. Staff queue transitions now use transactions; the existing ticket schema and queue ordering are unchanged. Patient intake creation (ticket insertion plus user status update) remains a separate future improvement.
+
+## Atomic staff workflows
+
+Each button now sends one POST request:
+
+| Action | Endpoint | Changes committed together |
+| --- | --- | --- |
+| Approve | `/triage/tickets/{id}/approve`, body `{"priority": 2}` | Create medical ticket, increment department load, remove triage ticket |
+| Decline | `/triage/tickets/{id}/decline` | Remove triage ticket, set patient status to `rejected` |
+| Call | `/medical/tickets/{id}/call` | Remove medical ticket, decrement department load, set patient status to `doctor` |
+
+Read `app/mr_back/services/workflow_service.py` first. Its `run_transaction` helper opens a MongoDB session using the existing client and calls `with_transaction`. Every database operation receives that session. Writes commit together; an exception rolls them all back. PyMongo can retry the transaction on transient conflicts, so the callback only performs database work. This database session is separate from the user's login session.
+
+MongoDB must support transactions. Local Compose now starts a **single-node replica set** named `triage-rs`. Run `docker compose up -d --wait` from the repository root to upgrade an existing local container; the same `fresh_mongodb` volume, accounts, and tickets are retained. Do not remove the volume. The startup script generates an internal replica-set key in that volume, and the health check initializes the replica set once and waits for a writable primary. Fresh installations use the same command. A single node enables transactions but does not provide high availability.
+
+The three workflows reject missing/already-processed tickets and inconsistent patient/load states. The smoke test checks that two simultaneous approvals cannot move the same ticket twice. This change does not add ticket claims, workflow history, or request idempotency keys. If a response is lost after commit, refresh to see the outcome before retrying; a repeated completed action returns 404.
+
+Reference: [PyMongo transactions](https://www.mongodb.com/docs/languages/python/pymongo-driver/current/crud/transactions/).
 
 ## Fresh Atlas instance for later deployment
 
@@ -103,7 +121,7 @@ From the repository root:
 .venv/bin/python scripts/smoke_test.py
 ```
 
-Unit tests use isolated in-memory MongoDB substitutes and never access Atlas. The smoke test uses the configured database, creates randomly named fictional test accounts, exercises the patient/nurse/doctor workflow, and deletes only its own records afterward. Seed demo departments before running it. It leaves short-lived authentication rate-limit records for automatic TTL cleanup.
+Unit tests use isolated in-memory MongoDB substitutes; they test routing and permissions, not real transaction semantics. The smoke test uses the configured MongoDB replica set, creates temporary fictional accounts and its own department, and deletes only those records afterward. It verifies all three staff actions, rollback after injected write failures and a business-rule failure, simultaneous approval, and repeated actions. No pre-existing demo department is required. It leaves short-lived authentication rate-limit records for automatic TTL cleanup.
 
 Frontend checks:
 

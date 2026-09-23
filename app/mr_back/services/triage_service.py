@@ -40,9 +40,3 @@ def update_ticket(db, ticket_id, ticket):
     db.VTTickets.update_one({'ticketID': ticket_id}, {'$set': data})
     data.pop('_id', None)
     return data
-
-
-def delete_ticket(db, ticket_id):
-    if not db.VTTickets.delete_one({'ticketID': ticket_id}).deleted_count:
-        raise HTTPException(404, 'Ticket not found')
-    return {'message': 'Ticket deleted successfully'}

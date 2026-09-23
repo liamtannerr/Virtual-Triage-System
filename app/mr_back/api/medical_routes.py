@@ -2,13 +2,9 @@ from fastapi import APIRouter, Depends, Request
 from models.Medical import MedicalTicket
 from security import current_user, require_roles
 from services import medical_service as service
+from services import workflow_service
 
 router = APIRouter()
-
-
-@router.post('/ticket', response_model=MedicalTicket)
-def create_med_ticket(ticket: MedicalTicket, request: Request, user=Depends(require_roles(2))):
-    return service.create_med_service(request.app.state.db, ticket)
 
 
 @router.get('/tickets', response_model=list[MedicalTicket])
@@ -21,6 +17,6 @@ def get_position(request: Request, user=Depends(require_roles(1))):
     return service.queue_position(request.app.state.db, user)
 
 
-@router.delete('/tickets/{ticket_id}')
-def delete_existing_ticket(ticket_id: int, request: Request, user=Depends(require_roles(3))):
-    return service.delete_ticket(request.app.state.db, ticket_id)
+@router.post('/tickets/{ticket_id}/call')
+def call(ticket_id: int, request: Request, user=Depends(require_roles(3))):
+    return workflow_service.call_patient(request.app.state.db, ticket_id)

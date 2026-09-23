@@ -25,7 +25,11 @@ def db():
 
 
 @pytest.fixture
-def client(db):
+def client(db, monkeypatch):
+    # mongomock has no transactions. These tests cover routes/permissions only;
+    # scripts/smoke_test.py verifies real transaction commit and rollback.
+    from services import workflow_service
+    monkeypatch.setattr(workflow_service, 'run_transaction', lambda db, action: action(None))
     app = create_app()
     app.state.db = db
     # No lifespan: security tests use an isolated DB; integration tests cover real startup.

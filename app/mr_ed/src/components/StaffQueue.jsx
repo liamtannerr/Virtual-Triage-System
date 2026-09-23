@@ -47,32 +47,15 @@ export default function StaffQueue({ role }) {
     setError("");
     try {
       if (nurse) {
-        if (Number(priority) === 10)
-          await api.put("/auth/user", {
-            inTriage: "rejected",
-            user_email: ticket.email,
-          });
-        else {
-          await api.post("/medical/ticket", {
-            VTticketID: ticket.ticketID,
+        if (Number(priority) === 10) {
+          await api.post(`/triage/tickets/${ticket.ticketID}/decline`);
+        } else {
+          await api.post(`/triage/tickets/${ticket.ticketID}/approve`, {
             priority: Number(priority),
-            startTime: new Date().toISOString(),
-            VTTicket: ticket,
-          });
-          await api.put(`/emergency/department/${ticket.ED}/currentLoad`, {
-            increment: 1,
           });
         }
-        await api.delete(`/triage/tickets/${ticket.ticketID}`);
       } else {
-        await api.put("/auth/user", {
-          inTriage: "doctor",
-          user_email: ticket.email,
-        });
-        await api.delete(`/medical/tickets/${selected.VTticketID}`);
-        await api.put(`/emergency/department/${ticket.ED}/currentLoad`, {
-          increment: -1,
-        });
+        await api.post(`/medical/tickets/${selected.VTticketID}/call`);
       }
       setNotice(
         nurse

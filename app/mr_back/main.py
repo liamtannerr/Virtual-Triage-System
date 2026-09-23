@@ -21,7 +21,9 @@ async def lifespan(app):
     client, db = connect_database()
     try:
         try:
-            client.admin.command('ping')
+            topology = client.admin.command('hello')
+            if not topology.get('setName') and topology.get('msg') != 'isdbgrid':
+                raise RuntimeError('MongoDB transactions require a replica set. Run docker compose up -d --wait.')
             initialize_database(db)
         except PyMongoError:
             raise RuntimeError('MongoDB initialization failed. Check backend configuration and database availability.') from None

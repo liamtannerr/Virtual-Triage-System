@@ -2,6 +2,7 @@ name: virtual-triage-fresh
 services:
   mongodb:
     image: mongo:8.0
+    entrypoint: ["bash", "/usr/local/bin/start-mongo.sh"]
     ports:
       - "127.0.0.1:27017:27017"
     environment:
@@ -12,8 +13,10 @@ services:
     volumes:
       - fresh_mongodb:/data/db
       - ./docker/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ./docker/start-mongo.sh:/usr/local/bin/start-mongo.sh:ro
+      - ./docker/replica-healthcheck.js:/usr/local/bin/replica-healthcheck.js:ro
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand('ping').ok ? 0 : 1)"]
+      test: ["CMD", "mongosh", "--quiet", "/usr/local/bin/replica-healthcheck.js"]
       interval: 5s
       timeout: 5s
       retries: 20
