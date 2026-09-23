@@ -1,11 +1,21 @@
-from pydantic import BaseModel
+from typing import Literal
 
-class PatientLogin( BaseModel ):
-    email: str
-    password: str
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-class PatientRegister( BaseModel ):
-    name: str
+
+class PatientLogin(BaseModel):
+    model_config = ConfigDict(extra='forbid', str_max_length=256)
+    email: EmailStr
+    password: str = Field(min_length=1, max_length=128)
+
+    @field_validator('email')
+    @classmethod
+    def normalize_email(cls, value):
+        return str(value).lower()
+
+
+class PatientRegister(PatientLogin):
+    name: str = Field(min_length=1, max_length=100)
     dateOfBirth: str
     gender: str
     streetAddress: str
@@ -14,19 +24,13 @@ class PatientRegister( BaseModel ):
     country: str
     postalCode: str
     healthNumber: str
-    email: str
-    password: str
-    user_type: int
-    inTriage: str
+    password: str = Field(min_length=15, max_length=128)
+    user_type: Literal[1] = 1
+    inTriage: Literal['false'] = 'false'
 
-class UserResponse( BaseModel ):
+
+class UserResponse(BaseModel):
     email: str
-    password: str
     user_type: int
-    token: str
     name: str
     inTriage: str
-
-class UserType( BaseModel ):
-    user_type: int
-    description: str

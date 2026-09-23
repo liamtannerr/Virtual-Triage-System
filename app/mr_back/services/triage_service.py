@@ -1,44 +1,48 @@
-from pymongo import MongoClient
-from fastapi import HTTPException, status
-from models.VirtualTriage import VTTicket
-from typing import List
+import secrets
+from datetime import datetime, timezone
 
-# MongoDB connection
-uri = 'mongodb+srv://admin:admin@mrcluster.lrupm.mongodb.net/'
-client = MongoClient(uri)
-db = client['mr_data']
-ticket_collection = db['VTTickets']
-user_collection = db['users']
+from fastapi import HTTPException
+from pymongo.errors import DuplicateKeyError
 
-async def get_tickets() -> List[VTTicket]:
+
+def get_tickets(db, user):
+    query = {'email': user['email']} if user['user_type'] == 1 else {}
+    return list(db.VTTickets.find(query, {'_id': 0}))
+
+
+def create_ticket(db, user, ticket):
+    if not ticket.consent:
+        raise HTTPException(422, 'Consent is required')
+    if not db.emergencyDepartments.find_one({'establishmentID': ticket.ED}):
+        raise HTTPException(422, 'Unknown emergency department')
+    if user['inTriage'] != 'false' or db.medicalTickets.find_one({'VTTicket.email': user['email']}):
+        raise HTTPException(409, 'You already have an active triage')
+    data = ticket.model_dump(mode='json')
+    # Identity, identifier and submission time are always server-controlled.
+    data.update(ticketID=secrets.randbits(52), email=user['email'], patient=user['name'],
+                timestamp=datetime.now(timezone.utc).isoformat())
     try:
-        tickets = list(ticket_collection.find({}, {'_id': 0}))
-        return tickets
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        db.VTTickets.insert_one(data)
+    except DuplicateKeyError:
+        raise HTTPException(409, 'You already have an active triage')
+    db.users.update_one({'_id': user['_id']}, {'$set': {'inTriage': 'true'}})
+    data.pop('_id', None)
+    return data
 
-async def create_ticket(ticket: VTTicket) -> VTTicket:
-    try:
-        ticket_dict = ticket.dict()
-        ticket_collection.insert_one(ticket_dict)
-        return ticket
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-async def update_ticket(ticket_id: int, ticket: VTTicket) -> VTTicket:
-    try:
-        result = ticket_collection.update_one({"ticketID": ticket_id}, {"$set": ticket.dict()})
-        if result.matched_count == 0:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
-        return ticket
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+def update_ticket(db, ticket_id, ticket):
+    existing = db.VTTickets.find_one({'ticketID': ticket_id})
+    if not existing:
+        raise HTTPException(404, 'Ticket not found')
+    data = ticket.model_dump(mode='json')
+    for field in ('ticketID', 'email', 'patient', 'timestamp', 'consent', 'ED'):
+        data[field] = existing[field]
+    db.VTTickets.update_one({'ticketID': ticket_id}, {'$set': data})
+    data.pop('_id', None)
+    return data
 
-async def delete_ticket(ticket_id: int) -> dict:
-    try:
-        result = ticket_collection.delete_one({"ticketID": ticket_id})
-        if result.deleted_count == 0:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
-        return {"message": "Ticket deleted successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+def delete_ticket(db, ticket_id):
+    if not db.VTTickets.delete_one({'ticketID': ticket_id}).deleted_count:
+        raise HTTPException(404, 'Ticket not found')
+    return {'message': 'Ticket deleted successfully'}

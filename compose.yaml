@@ -1,0 +1,22 @@
+name: virtual-triage-fresh
+services:
+  mongodb:
+    image: mongo:8.0
+    ports:
+      - "127.0.0.1:27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: triage_root
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?Run python3 scripts/setup_local.py first}
+      MONGO_INITDB_DATABASE: virtual_triage
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:?Run python3 scripts/setup_local.py first}
+    volumes:
+      - fresh_mongodb:/data/db
+      - ./docker/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand('ping').ok ? 0 : 1)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+volumes:
+  fresh_mongodb:

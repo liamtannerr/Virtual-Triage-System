@@ -4,6 +4,12 @@ The **Virtual Triage System** is designed to support emergency departments acros
 
 With emergency department waits often exceeding **8 hours** in BC, this system enables patients to remotely submit their symptoms to a triage nurse, who then assigns a priority level and places them in a **virtual queue**. Patients can remain at home while they await availability, and monitor **real-time wait times** for emergency departments in their region.
 
+## Run the current application
+
+The application now uses a fresh MongoDB database, Argon2 password hashing, expiring cookie sessions, and backend role/record access checks. See [local setup, staff accounts, and security details](docs/SECURITY_AND_SETUP.md).
+
+The frontend uses React + Vite; the backend uses FastAPI + PyMongo. MongoDB can run locally with Docker Compose, with a separate new Atlas instance configured for future deployment.
+
 ## Key Features
 
 - Remote symptom submission and triage by a qualified nurse  
@@ -30,7 +36,6 @@ Future enhancements may include:
 
 - Integration with hospital databases and EMR systems  
 - Automated triage recommendations using AI/ML models  
-- Secure login and role-based access for staff and patients  
 - Full deployment to a cloud-based infrastructure for scalability  
 
 ## License

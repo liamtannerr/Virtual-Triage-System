@@ -1,90 +1,41 @@
-from pymongo import MongoClient
-import jwt
-from fastapi import HTTPException, status
-from models.User import PatientLogin
-from models.User import PatientRegister
-from fastapi.security import HTTPBearer
+from fastapi import HTTPException
+from pymongo.errors import DuplicateKeyError
+from pwdlib.exceptions import UnknownHashError
+
+from security import DUMMY_HASH, password_hash
 
 
-uri = 'mongodb+srv://admin:admin@mrcluster.lrupm.mongodb.net/?retryWrites=true&w=majority&tlsAllowInvalidCertificates=true'
-client = MongoClient( uri )
-db = client[ 'mr_data' ]
-users_collection = db[ 'users' ]
-
-SECRET_KEY = 'super_secret_key'
-security = HTTPBearer()
-
-
-async def login_service( patientLogin: PatientLogin ):
+def register_service(db, registration):
+    data = registration.model_dump(exclude={'password'})
+    data.update(password_hash=password_hash.hash(registration.password), user_type=1, inTriage='false')
     try:
-        patient_data = users_collection.find_one( { 'email': patientLogin.email, 'password': patientLogin.password } )
-        if patient_data:
-            token = generate_token( patientLogin.email )
-            patient_data[ '_id' ] = str( patient_data[ '_id' ] )  # Convert ObjectId to string
-            patient_data[ 'name' ] = str( patient_data[ 'name' ] )
-            patient_data[ 'token' ] = token
-            return patient_data
-        
-        raise HTTPException( status_code = status.HTTP_401_UNAUTHORIZED, detail = "Invalid email or password" )
-    
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-    
-
-async def register_service( patientRegister: PatientRegister ):
-    existing_user = users_collection.find_one(
-        { 'email': patientRegister.email })
-    
-    if existing_user:
-        raise HTTPException( status_code = status.HTTP_400_BAD_REQUEST, detail = "User already exists" )
-    
-    patient_dict = patientRegister.dict()
-    patient_dict[ 'user_type' ] = 1
-    users_collection.insert_one( patient_dict )
-    token = generate_token( patientRegister.email )
-    patient_dict[ "_id" ] = str( patient_dict[ "_id" ] )
-    patient_dict[ "token" ] = token
-    return patient_dict
+        db.users.insert_one(data)
+    except DuplicateKeyError:
+        raise HTTPException(409, 'Unable to create account with these details')
+    return data
 
 
-async def get_user_service( token: str ):
+def login_service(db, login):
+    user = db.users.find_one({'email': login.email})
     try:
-        payload = jwt.decode( token, SECRET_KEY, algorithms=[ 'HS256' ] )
-        email = payload.get( 'email' )
-        user_data = users_collection.find_one( { 'email': email } )
-        
-        if user_data:
-            return { 
-                'email': user_data[ 'email' ],
-                'token': token,
-                'password': user_data[ 'password' ],
-                'user_type': user_data[ 'user_type' ],
-                'name': user_data[ 'name' ],
-                'inTriage': user_data[ 'inTriage' ]
-
-            }
-        
-    except jwt.ExpiredSignatureError:
-        raise HTTPException( status_code = 401, detail = 'Token expired' )
-    except jwt.InvalidTokenError:
-        raise HTTPException( status_code = 401, detail = 'Invalid token' )
-    
-    raise HTTPException( status_code = 401, detail = 'Invalid token' )
+        valid = password_hash.verify(login.password, user.get('password_hash', DUMMY_HASH) if user else DUMMY_HASH)
+    except (UnknownHashError, ValueError):
+        valid = False
+    if not valid or not user or user.get('disabled'):
+        raise HTTPException(401, 'Invalid email or password')
+    return user
 
 
-def generate_token( email: str ) -> str:
-    payload = { 'email': email }
-    token = jwt.encode( payload, SECRET_KEY, algorithm='HS256' )
-    return token
-
-async def update_user_service(user_email: str, inTriage: str):
-    user = users_collection.find_one({"email": user_email})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    result = users_collection.update_one(
-        {"email": user_email},
-        {"$set": {"inTriage": inTriage}}
-    )
-
-    return {"message": "User status updated", "value": inTriage}
+def update_user_service(db, actor, email, state):
+    if actor['user_type'] == 1:
+        if email != actor['email'] or state != 'false' or actor['inTriage'] not in ('doctor', 'rejected'):
+            raise HTTPException(403, 'This status change is not permitted')
+    elif actor['user_type'] == 2:
+        if state != 'rejected' or not db.VTTickets.find_one({'email': email}):
+            raise HTTPException(403, 'This status change is not permitted')
+    elif actor['user_type'] == 3:
+        if state != 'doctor' or not db.medicalTickets.find_one({'VTTicket.email': email}):
+            raise HTTPException(403, 'This status change is not permitted')
+    if not db.users.update_one({'email': email, 'user_type': 1}, {'$set': {'inTriage': state}}).matched_count:
+        raise HTTPException(404, 'Patient not found')
+    return {'message': 'User status updated', 'value': state}

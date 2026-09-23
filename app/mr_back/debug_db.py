@@ -1,11 +1,13 @@
-from pymongo import MongoClient
+"""Check connectivity without printing patient records or connection credentials."""
+from database import connect_database
+from pymongo.errors import PyMongoError
 
-# MongoDB connection
-uri = 'mongodb+srv://admin:admin@mrcluster.lrupm.mongodb.net/'
-client = MongoClient(uri)
-db = client['mr_data']
-Department_collection = db['emergencyDepartments']
-
-# Print all departments
-for department in Department_collection.find():
-    print(department)
+if __name__ == '__main__':
+    client, db = connect_database()
+    try:
+        client.admin.command('ping')
+        print('MongoDB connection successful.')
+    except PyMongoError:
+        raise SystemExit('MongoDB connection failed. Check backend configuration and database availability.')
+    finally:
+        client.close()

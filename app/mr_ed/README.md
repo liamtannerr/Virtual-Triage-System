@@ -1,70 +1,32 @@
-# Getting Started with Create React App
+# Virtual Triage frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React + Vite. See [the project setup guide](../../docs/SECURITY_AND_SETUP.md) for MongoDB, backend startup, staff accounts, and deployment configuration.
 
-## Available Scripts
+```sh
+npm ci
+npm start
+npm test
+npm run build
+```
 
-In the project directory, you can run:
+Development URL: http://localhost:3000. Production output: `build/`.
 
-### `npm start`
+Set `VITE_API_URL` in `.env.local` to change the public API URL. It defaults to `/api`. In development, Vite proxies that path to FastAPI at `http://127.0.0.1:8000`; production hosting must configure its own API proxy. Never put database credentials or session secrets in frontend environment variables.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Updated interface
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+The frontend has a shared teal-and-cream design, responsive navigation, and consistent loading, empty, error, and success states. It uses system fonts and local SVG icons without external asset services.
 
-### `npm test`
+- **Departments:** queue estimates refresh every 30 seconds. Choosing a department preselects it in the intake form after login. Estimates use the prototype's existing `currentLoad × 15 minutes` calculation.
+- **Patient intake:** a three-step form covers background, grouped symptoms, and review/consent. Back navigation keeps your entries.
+- **Nurse workspace:** search submissions by patient or department, inspect readable symptom groups, and explicitly choose a priority. Declining a submission requires confirmation.
+- **Doctor workspace:** review the backend's prioritized queue and call a patient.
+- **Patient waiting room:** status and queue position refresh every 10 seconds, with clear reviewed, called, and declined states.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Staff queues also refresh every 30 seconds. These are polling intervals, so another user's action may take up to that interval to appear; Refresh checks immediately. Queue transitions retain the existing API operations and their multi-request limitation described in the setup guide.
 
-### `npm run build`
+## Try the full workflow locally
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Start MongoDB, FastAPI, and Vite using the setup guide. Register a fictional patient and submit an intake form. Create nurse and doctor accounts with the administrator CLI if you haven't already. Use separate browser profiles or log out between roles: assign a priority as the nurse, call the patient as the doctor, and return to the patient's waiting room to acknowledge the update.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+`npm test` covers authentication guards, login, department retry, intake field preservation and payloads, consent, explicit nurse priority selection, and decline confirmation.
