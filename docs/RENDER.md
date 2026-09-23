@@ -51,12 +51,25 @@ Use the same Git branch and these settings:
 Manually add every environment variable from `render.yaml`. The `sync: false`
 entries need your actual values; do not enter the text `sync: false` as a value.
 
-## Connect the frontend afterward
+## Connect the frontend
 
-Keep Vercel's `VITE_API_URL=/api`. Once the Render URL is known, add a Vercel rewrite
-from `/api/:path*` to `https://YOUR-SERVICE.onrender.com/:path*`, before the React SPA
-fallback. This strips `/api` and keeps browser requests on the frontend origin so
-the app's Strict cookies work. Preserve `Cache-Control: no-store` for API responses.
+The frontend is `https://mr-ed.vercel.app` and the backend is
+`https://mr-ed-api.onrender.com`.
+
+1. In Vercel, use `app/mr_ed` as the project's root directory. Set the production
+   environment variable `VITE_API_URL` to `/api`.
+2. In Render, set `ALLOWED_ORIGINS` to `["https://mr-ed.vercel.app"]`.
+3. Commit and push `app/mr_ed/vercel.json`, then deploy that commit to Vercel
+   production. Environment variable changes also require a new frontend build.
+4. Open `https://mr-ed.vercel.app/api/emergency/department`. It should return
+   department JSON, not an HTML page. Register a fictional patient, refresh the
+   page to check the session persists, then log out and log back in.
+
+The Vercel configuration forwards `/api/:path*` to
+`https://mr-ed-api.onrender.com/:path*` before the React SPA fallback. This strips
+`/api` and keeps browser requests on the frontend origin so the app's Strict
+cookies work. API caching is explicitly disabled. The SPA fallback lets React
+pages such as `/login` work when opened directly or refreshed.
 Verify the deployed Origin/Host forwarding and the full login flow before sharing
 the demo. If the proxy forwards the frontend Host instead of the Render hostname,
 explicitly add that frontend hostname to `ALLOWED_HOSTS`.
