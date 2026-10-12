@@ -5,7 +5,7 @@ import { Icon, EmptyState, ErrorNotice, RefreshButton, waitLabel } from "./UI";
 
 export default function Homepage() {
   const departments = useResource("/emergency/department", 30000, {
-    checkReadiness: true,
+    retryStartup: true,
   });
   return (
     <>

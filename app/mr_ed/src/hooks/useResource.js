@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import api from "../api";
-import waitForBackend from "../backendReady";
+import loadResourceWithRetry from "../loadResourceWithRetry";
 
 export default function useResource(
   path,
   interval = 0,
-  { checkReadiness = false } = {},
+  { retryStartup = false } = {},
 ) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -15,7 +15,7 @@ export default function useResource(
   useEffect(() => {
     let active = true;
     let pending = false;
-    let ready = !checkReadiness;
+    let initialLoad = true;
     const controller = new AbortController();
     const fetchData = async () => {
       if (pending) return;
@@ -23,11 +23,10 @@ export default function useResource(
       setRefreshing(true);
       setError("");
       try {
-        if (!ready) {
-          await waitForBackend(controller.signal);
-          ready = true;
-        }
-        const response = await api.get(path, { signal: controller.signal });
+        const response = initialLoad && retryStartup
+          ? await loadResourceWithRetry(path, controller.signal)
+          : await api.get(path, { signal: controller.signal });
+        initialLoad = false;
         if (active) {
           setData(response.data);
           setError("");
@@ -52,7 +51,7 @@ export default function useResource(
       controller.abort();
       clearInterval(timer);
     };
-  }, [path, interval, version, checkReadiness]);
+  }, [path, interval, version, retryStartup]);
   return {
     data,
     error,

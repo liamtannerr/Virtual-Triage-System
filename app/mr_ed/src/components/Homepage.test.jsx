@@ -7,7 +7,6 @@ import Homepage from "./Homepage";
 
 vi.mock("../api", () => ({ default: { get: vi.fn() } }));
 
-const ready = { data: { message: "Virtual Triage API" } };
 const departments = { data: [{
   establishmentID: 42,
   name: "Example Emergency Department",
@@ -18,7 +17,7 @@ const departments = { data: [{
 beforeEach(() => {
   vi.useFakeTimers();
   api.get.mockReset();
-  api.get.mockImplementation(async (path) => path === "/" ? ready : departments);
+  api.get.mockResolvedValue(departments);
 });
 afterEach(() => {
   cleanup();
@@ -33,12 +32,16 @@ async function mountHomepage() {
   return view;
 }
 
-test("a warm backend loads immediately and subsequent polling skips readiness checks", async () => {
+test("a warm backend loads directly even when the API root returns frontend HTML", async () => {
+  api.get.mockImplementation(async (path) => ({
+    data: path === "/emergency/department"
+      ? departments.data : "<html>Frontend app</html>",
+  }));
   await mountHomepage();
-  expect(api.get.mock.calls.map(([path]) => path)).toEqual(["/", "/emergency/department"]);
+  expect(api.get.mock.calls.map(([path]) => path)).toEqual(["/emergency/department"]);
   expect(screen.getByText("1h 15m")).toBeInTheDocument();
   await act(() => vi.advanceTimersByTimeAsync(30000));
-  expect(api.get.mock.calls.map(([path]) => path)).toEqual(["/", "/emergency/department", "/emergency/department"]);
+  expect(api.get.mock.calls.map(([path]) => path)).toEqual(["/emergency/department", "/emergency/department"]);
 });
 
 test.each([undefined, 502, 503, 504])("startup failure (%s) keeps loading and recovers without a click", async (status) => {
@@ -50,10 +53,10 @@ test.each([undefined, 502, 503, 504])("startup failure (%s) keeps loading and re
   await act(() => vi.advanceTimersByTimeAsync(3000));
   expect(screen.getByText("1h 15m")).toBeInTheDocument();
   expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-  expect(api.get.mock.calls.map(([path]) => path)).toEqual(["/", "/", "/emergency/department"]);
+  expect(api.get.mock.calls.map(([path]) => path)).toEqual(["/emergency/department", "/emergency/department"]);
 });
 
-test("a host startup page does not release the department request", async () => {
+test("a host startup page is retried until department JSON arrives", async () => {
   api.get.mockResolvedValueOnce({ data: "<html>Starting service</html>" });
   await mountHomepage();
   expect(api.get).toHaveBeenCalledTimes(1);
@@ -64,15 +67,14 @@ test("a host startup page does not release the department request", async () => 
 
 test("a minute-long cold start tolerates request timeouts without overlapping polls", async () => {
   api.get.mockImplementation((path, { timeout }) => {
-    if (path !== "/") return Promise.resolve(departments);
     return new Promise((resolve, reject) => setTimeout(() => reject(new Error("Timeout")), timeout));
   });
   await mountHomepage();
   await act(() => vi.advanceTimersByTimeAsync(60000));
   expect(api.get).toHaveBeenCalledTimes(5);
-  expect(api.get.mock.calls.every(([path]) => path === "/")).toBe(true);
+  expect(api.get.mock.calls.every(([path]) => path === "/emergency/department")).toBe(true);
   expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-  api.get.mockImplementation(async (path) => path === "/" ? ready : departments);
+  api.get.mockResolvedValue(departments);
   await act(() => vi.advanceTimersByTimeAsync(5000));
   expect(screen.getByText("1h 15m")).toBeInTheDocument();
 });
@@ -82,8 +84,8 @@ test("persistent startup failure eventually offers a working manual retry", asyn
   await mountHomepage();
   await act(() => vi.advanceTimersByTimeAsync(120000));
   expect(screen.getByRole("alert")).toHaveTextContent("We couldn’t load");
-  expect(api.get.mock.calls.every(([path]) => path === "/")).toBe(true);
-  api.get.mockImplementation(async (path) => path === "/" ? ready : departments);
+  expect(api.get.mock.calls.every(([path]) => path === "/emergency/department")).toBe(true);
+  api.get.mockResolvedValue(departments);
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "Try again" })));
   expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   expect(screen.getByText("1h 15m")).toBeInTheDocument();
