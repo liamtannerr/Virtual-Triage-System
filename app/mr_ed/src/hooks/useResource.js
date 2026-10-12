@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import api from "../api";
+import waitForBackend from "../backendReady";
 
-export default function useResource(path, interval = 0) {
+export default function useResource(
+  path,
+  interval = 0,
+  { checkReadiness = false } = {},
+) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
@@ -10,12 +15,18 @@ export default function useResource(path, interval = 0) {
   useEffect(() => {
     let active = true;
     let pending = false;
+    let ready = !checkReadiness;
     const controller = new AbortController();
     const fetchData = async () => {
       if (pending) return;
       pending = true;
       setRefreshing(true);
+      setError("");
       try {
+        if (!ready) {
+          await waitForBackend(controller.signal);
+          ready = true;
+        }
         const response = await api.get(path, { signal: controller.signal });
         if (active) {
           setData(response.data);
@@ -41,7 +52,7 @@ export default function useResource(path, interval = 0) {
       controller.abort();
       clearInterval(timer);
     };
-  }, [path, interval, version]);
+  }, [path, interval, version, checkReadiness]);
   return {
     data,
     error,

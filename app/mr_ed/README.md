@@ -23,6 +23,8 @@ The frontend has a shared teal-and-cream design, responsive navigation, and cons
 - **Doctor workspace:** review the backend's prioritized queue and call a patient.
 - **Patient waiting room:** status and queue position refresh every 10 seconds, with clear reviewed, called, and declined states.
 
+The homepage first checks the API's `/` status response before requesting departments. On a cold start it keeps the loading state visible, retrying network failures and temporary gateway errors for up to two minutes. Each status request has a ten-second timeout with three seconds between attempts. The API answers only after its database startup completes. Once ready, department polling runs normally without extra status checks; leaving the page cancels startup checks. If startup still fails, the page offers **Try again**.
+
 Staff queues also refresh every 30 seconds. These are polling intervals, so another user's action may take up to that interval to appear; Refresh checks immediately. Approve, decline, and call each send one request; the backend commits the related database changes together in a transaction. See the setup guide for the endpoints and local MongoDB replica-set setup.
 
 ## Try the full workflow locally

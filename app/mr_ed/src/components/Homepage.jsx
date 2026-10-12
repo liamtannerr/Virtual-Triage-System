@@ -4,7 +4,9 @@ import useResource from "../hooks/useResource";
 import { Icon, EmptyState, ErrorNotice, RefreshButton, waitLabel } from "./UI";
 
 export default function Homepage() {
-  const departments = useResource("/emergency/department", 30000);
+  const departments = useResource("/emergency/department", 30000, {
+    checkReadiness: true,
+  });
   return (
     <>
       <section className="hero">
@@ -89,7 +91,8 @@ export default function Homepage() {
         )}
         {departments.loading ? (
           <EmptyState loading title="Loading departments">
-            Finding the latest queue estimates…
+            Finding the latest queue estimates… This may take a minute while the
+            service starts.
           </EmptyState>
         ) : departments.data?.length ? (
           <div className="department-grid">

@@ -36,7 +36,8 @@ beforeEach(() => {
   localStorage.clear();
   window.scrollTo = vi.fn();
   api.get.mockImplementation(async (path) => ({
-    data: path === "/emergency/department" ? [department] : [ticket],
+    data: path === "/" ? { message: "Virtual Triage API" }
+      : path === "/emergency/department" ? [department] : [ticket],
   }));
   api.post.mockResolvedValue({ data: {} });
   api.put.mockResolvedValue({ data: {} });
@@ -45,6 +46,7 @@ beforeEach(() => {
 afterEach(cleanup);
 
 test("department errors can be retried and cards retain the selected department in their link", async () => {
+  api.get.mockResolvedValueOnce({ data: { message: "Virtual Triage API" } });
   api.get.mockRejectedValueOnce(new Error("Offline"));
   render(
     <MemoryRouter>
